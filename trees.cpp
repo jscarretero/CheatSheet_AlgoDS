@@ -366,14 +366,14 @@ bool isBalancedFast (Node* root, int& h) {
 }
 
 void isBalanced_example() {
-    Node *root = newNode(1);
-    root->left = newNode(2);
-    root->right = newNode(3);
-    root->left->left = newNode(4);
-    root->left->right = newNode(5);
-    root->right->left = newNode(6);
+    Node *root             = newNode(1);
+    root->left             = newNode(2);
+    root->right            = newNode(3);
+    root->left->left       = newNode(4);
+    root->left->right      = newNode(5);
+    root->right->left      = newNode(6);
     root->left->left->left = newNode(7);
-    //scout << "Tree is balanced: " << isBalanced(root) << endl;
+    //cout << "Tree is balanced: " << isBalanced(root) << endl;
     int tmp;
     cout << "Tree is balanced: " << isBalancedFast(root, tmp) << endl;
 }
@@ -388,12 +388,12 @@ int leaves (Node* root) {
 }
 
 void leaves_example() {
-    Node *root = newNode(1);
-    root->left = newNode(2);
-    root->right = newNode(3);
-    root->left->left = newNode(4);
-    root->left->right = newNode(5);
-    root->right->left = newNode(6);
+    Node *root              = newNode(1);
+    root->left             = newNode(2);
+    root->right            = newNode(3);
+    root->left->left       = newNode(4);
+    root->left->right      = newNode(5);
+    root->right->left      = newNode(6);
     root->left->left->left = newNode(7);
     cout << "Number of leaves is: " << leaves(root) << endl;
 }
@@ -479,6 +479,87 @@ void hasPathSum_example() {
     cout << hasPathSum(root, 21, 0) << endl;;
 }
 
+/* =================== Remove all nodes wich don't lie in any path with sum >= k =================*/
+// http://www.geeksforgeeks.org/remove-all-nodes-which-lie-on-a-path-having-sum-less-than-k/
+
+Node* removePathsSmaller(Node* root, int k, int s) {
+    if (root == NULL) return NULL;
+    root->left =  removePathsSmaller(root->left,  k, s + root->data);
+    root->right=  removePathsSmaller(root->right, k, s + root->data);
+    if ((s + root->data < k) && !root->left && !root->right) {
+        delete root;
+        return NULL;
+    } else {
+        return root;
+    }
+}
+
+void removePathsSmaller_example() {
+    int k = 45;
+    Node *root                           = newNode(1);
+    root->left                           = newNode(2);
+    root->right                          = newNode(3);
+    root->left->left                     = newNode(4);
+    root->left->right                    = newNode(5);
+    root->right->left                    = newNode(6);
+    root->right->right                   = newNode(7);
+    root->left->left->left               = newNode(8);
+    root->left->left->right              = newNode(9);
+    root->left->right->left              = newNode(12);
+    root->right->right->left             = newNode(10);
+    root->right->right->left->right      = newNode(11);
+    root->left->left->right->left        = newNode(13);
+    root->left->left->right->right       = newNode(14);
+    root->left->left->right->right->left = newNode(15);
+
+    root = removePathsSmaller(root, k, 0); // k is 45
+    cout << "Tree after removing paths smaller than k: ";
+    printInOrder(root);
+    cout << endl;
+}
+
+/* ==============BST with + and - values, print ALL paths which sum to value v====================*/
+// Note: path does not necessarily start at root and end in leaf
+//Cracking the coding interview book. Problem 4.9
+
+void pathsSumVal (Node* root, int v, vector<int>& curr_path) {
+    if (root == NULL) return;
+
+    curr_path.push_back(root->data);
+
+    int acc = 0;
+    for (int i = curr_path.size() - 1 ; i >= 0; i--) {
+        acc += curr_path[i];
+        if (acc == v) {
+            // Print path
+            cout << "\t";
+            for (int l = i; l < curr_path.size(); l++) {
+                cout << curr_path[l] << " ";
+            }
+            cout << endl;
+        }
+    }
+    pathsSumVal(root->left,  v, curr_path);
+    pathsSumVal(root->right, v, curr_path);
+
+    curr_path.pop_back();
+}
+
+void pathsSumVal_example() {
+    Node *T               = newNode(26);
+    T->right              = newNode(3);
+    T->right->right       = newNode(3);
+    T->left               = newNode(10);
+    T->left->left         = newNode(4);
+    T->left->left->right  = newNode(30);
+    T->left->left->left   = newNode(2);
+    T->left->right        = newNode(6);
+    vector<int> curr_path;
+    cout << "All paths which sum to value 16: " << endl;
+    pathsSumVal(T, 16, curr_path);
+    cout << endl;
+}
+
 /* ===============================================================================================*/
 int main () {
 
@@ -497,6 +578,8 @@ int main () {
     printDistanceK_example();
     rootToLeafs_example();
     hasPathSum_example();
+    removePathsSmaller_example();
+    pathsSumVal_example();
 }
 
 /* =======================================TODO====================================================*/
@@ -505,4 +588,5 @@ int main () {
 // http://www.geeksforgeeks.org/merge-two-bsts-with-limited-extra-space/
 // http://www.geeksforgeeks.org/fix-two-swapped-nodes-of-bst/
 // http://www.geeksforgeeks.org/check-whether-binary-tree-complete-not-set-2-recursive-solution/
-// http://www.geeksforgeeks.org/given-linked-list-representation-of-complete-tree-convert-it-to-linked-representation/
+// http://www.geeksforgeeks.org/given-linked-list-representation-of-complete-tree-convert-it-to-
+//        linked-representation/
