@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <cmath> // min
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -61,12 +60,12 @@ void printInOrder (Node* root) {
 }
 
 /* ============================== Sorted Array to Balanced BST ===================================*/
-// stp://www.geeksforgeeks.org/sorted-array-to-balanced-bst/
+// http://www.geeksforgeeks.org/sorted-array-to-balanced-bst/
 
 Node* arrayToTree (vector<int>& v, int l, int r) {
     if (l  > r)   return NULL;
     if (l == r)   return newNode(v[l]);
-    
+
     int h = (l + r) / 2;  //l + ((r - l) / 2)
     Node* root  = newNode(v[h]);
     root->left  = arrayToTree(v, l, h-1);
@@ -75,25 +74,23 @@ Node* arrayToTree (vector<int>& v, int l, int r) {
 }
 
 void arrayToTree_example () {
-    vector<int> v {1,2,3,4,5,6,7}; // -std=c++11    
+    vector<int> v {1,2,3,4,5,6,7}; // -std=c++11
     cout << "Tree is: ";
-    printPreOrder ( arrayToTree(v, 0, v.size() - 1) ); 
+    printPreOrder ( arrayToTree(v, 0, v.size() - 1) );
     cout << endl;
 }
 
 /*================================= Check if tree is BST ========================================*/
 // htp://www.geeksforgeeks.org/a-program-to-check-if-a-binary-tree-is-bst-or-not/
-// A Binary Search Tree is a tree where nodes in the left subtree are smaller than the root node, and
-// nodes in the right subtree are bigger that the root node
 
 Node* lastNode = NULL;
 
 bool isBST (Node* root) {
     if (root == NULL)        return true;
     if (!isBST(root->left))  return false;
-    
+
     if ((lastNode != NULL) && (lastNode->data >= root->data)) return false;
-    
+
     lastNode = root;
     return isBST(root->right);
 }
@@ -109,7 +106,6 @@ void isBST_example() {
 
 /* =============================== Inorder successor in BST ======================================*/
 // http://www.geeksforgeeks.org/inorder-successor-in-binary-search-tree/
-// The inorder successor of a node is always bigger if it exists
 
 Node* inorderSuccessor(Node* root, Node* n) {
     if (root == NULL)  return NULL;
@@ -146,7 +142,7 @@ void inorderSuccessor_example() {
         printf("Inorder Successor of %d is %d \n", temp->data, succ->data);
     else
         printf("Inorder Successor doesn't exit\n");
-    
+
 }
 
 /* ===============================  Is a Tree Symmetric (Mirror Image) ===========================*/
@@ -216,15 +212,15 @@ void minDepth_example() {
     root->right       = newNode(3);
     root->left->left  = newNode(4);
     root->left->right = newNode(5);
-    cout << "Minimum tree depth is: " << minDepth(root) << endl;    
+    cout << "Minimum tree depth is: " << minDepth(root) << endl;
 }
 
 /* =========================Print Common Nodes in Two BST=========================================*/
 // http://www.geeksforgeeks.org/print-common-nodes-in-two-binary-search-trees/
 
 /* Method 1 (Simple Solution)
- *   A simple way is to one by once search every node of first tree in second tree. Time complexity 
- *   of this solution is O(m * h) where m is number of nodes in first tree and 
+ *   A simple way is to one by once search every node of first tree in second tree. Time complexity
+ *   of this solution is O(m * h) where m is number of nodes in first tree and
  *   h is height of second tree.
  *
  * Method 2 (Linear Time) We can find common elements in O(n) time.
@@ -232,7 +228,7 @@ void minDepth_example() {
  *   2) Do inorder traversal of second tree and store the traversal in an auxiliary array ar2[]
  *   3) Find intersection of ar1[] and ar2[]. See this for details.
  *
- * Time complexity of this method is O(m+n) where m and n are number of nodes in first and second 
+ * Time complexity of this method is O(m+n) where m and n are number of nodes in first and second
  * tree respectively.
  * This solution requires O(m+n) extra space
 */
@@ -240,7 +236,7 @@ void minDepth_example() {
 void treeToArray(Node* root, vector<Node*>& v) {
     if (root == NULL) return;
     treeToArray(root->left, v);
-    v.push_back(root);    
+    v.push_back(root);
     treeToArray(root->right, v);
 }
 
@@ -264,7 +260,7 @@ vector<Node*> intersectArrays(vector<Node*>& a1, vector<Node*>& a2) {
 
 vector<Node*> commonNodes (Node* t1, Node* t2) {
     vector<Node*> a1, a2;
-    
+
     treeToArray(t1, a1);
     treeToArray(t2, a2);
 
@@ -273,11 +269,11 @@ vector<Node*> commonNodes (Node* t1, Node* t2) {
 
 void commonNodes_example() {
     Node *root = insert(NULL, 8);
-          root = insert(root, 6); 
-          root = insert(root, 2); 
-          root = insert(root, 7); 
-          root = insert(root, 4); 
-    
+          root = insert(root, 6);
+          root = insert(root, 2);
+          root = insert(root, 7);
+          root = insert(root, 4);
+
 
     Node* root2 = insert(NULL, 5);
                   insert(root2, 9);
@@ -324,6 +320,30 @@ void size_example() {
     cout << "Size of tree is: " << size(root) << endl;
 }
 
+/* ===============================Identical Trees?================================================*/
+// http://www.geeksforgeeks.org/write-c-code-to-determine-if-two-trees-are-identical/
+bool identical (Node* t1, Node* t2) {
+    if (!t1) return !t2;
+    if (!t2) return !t1;
+    return (t1->data == t2->data) && identical(t1->left, t2->left) &&
+                                     identical(t1->right, t2->right);
+}
+
+void identical_example() {
+    Node *root1        = newNode(1);
+    Node *root2        = newNode(1);
+    root1->left        = newNode(2);
+    root1->right       = newNode(3);
+    root1->left->left  = newNode(4);
+    root1->left->right = newNode(5);
+
+    root2->left        = newNode(2);
+    root2->right       = newNode(3);
+    root2->left->left  = newNode(4);
+    root2->left->right = newNode(5);
+    cout << "Trees are identical: " << identical(root1, root2) << endl;
+}
+
 /* ==============================Is tree balanced? ===============================================*/
 // http://www.geeksforgeeks.org/how-to-determine-if-a-binary-tree-is-balanced/
 bool isBalanced (Node* root) {
@@ -342,7 +362,7 @@ bool isBalancedFast (Node* root, int& h) {
     bool is1 = isBalancedFast(root->left,  h1);
     bool is2 = isBalancedFast(root->right, h2);
     h = 1 + max (h1, h2);
-    return (is1 && is2 && ((h1 == h2) || (h1 + 1 == h2) || (h1 == h2 + 1))); 
+    return (is1 && is2 && ((h1 == h2) || (h1 + 1 == h2) || (h1 == h2 + 1)));
 }
 
 void isBalanced_example() {
@@ -353,9 +373,9 @@ void isBalanced_example() {
     root->left->right = newNode(5);
     root->right->left = newNode(6);
     root->left->left->left = newNode(7);
-    //scout << "Tree is balanced: " << isBalanced(root) << endl;    
+    //scout << "Tree is balanced: " << isBalanced(root) << endl;
     int tmp;
-    cout << "Tree is balanced: " << isBalancedFast(root, tmp) << endl;    
+    cout << "Tree is balanced: " << isBalancedFast(root, tmp) << endl;
 }
 
 /* =========================================Count Leaves==========================================*/
@@ -375,12 +395,13 @@ void leaves_example() {
     root->left->right = newNode(5);
     root->right->left = newNode(6);
     root->left->left->left = newNode(7);
-    cout << "Number of leaves is: " << leaves(root) << endl;    
+    cout << "Number of leaves is: " << leaves(root) << endl;
 }
 /* ========================Print nodes at k distance from root====================================*/
 // http://www.geeksforgeeks.org/print-nodes-at-k-distance-from-root/
+
 void printDistanceK (Node* root, int h, int c) {
-    if (!root) return;        
+    if (!root) return;
     if (c == h) cout << root->data << " ";
     else {
         printDistanceK(root->left, h, c+1);
@@ -401,9 +422,66 @@ void printDistanceK_example() {
     cout << endl;
 }
 
+/* =============================Root-To-Leaf Paths================================================*/
+// http://www.geeksforgeeks.org/given-a-binary-tree-print-all-root-to-leaf-paths/
+// http://www.geeksforgeeks.org/sum-numbers-formed-root-leaf-paths/s
+
+void rootToLeafs (Node* root, vector<int>& curr_path) {
+    if (root == NULL) return;
+    curr_path.push_back(root->data);
+    if (!root->left && !root->right) {
+        // Print path
+        cout << '\t';
+        for (auto& e: curr_path)
+            cout << e << " ";
+        cout << endl;
+    }
+    else {
+        rootToLeafs(root->left, curr_path);
+        curr_path.pop_back();
+        rootToLeafs(root->right, curr_path);
+        curr_path.pop_back();
+    }
+}
+
+void rootToLeafs_example() {
+    Node *root         = newNode(10);
+    root->left         = newNode(8);
+    root->right        = newNode(2);
+    root->left->left   = newNode(3);
+    root->left->right  = newNode(5);
+    root->right->left  = newNode(12);
+    root->right->right = newNode(20);
+
+    vector<int> current_sol;
+    cout << "Root to leaf paths are: " << endl;
+    rootToLeafs(root, current_sol);
+}
+
+/* ======================================== Path Sum==============================================*/
+// http://www.geeksforgeeks.org/root-to-leaf-path-sum-equal-to-a-given-number/
+
+bool hasPathSum (Node* root, int s, int acc) {
+    if (root == NULL) return false;
+    if (!root->left && !root->right) return (s == acc + root->data);
+    return hasPathSum(root->left, s, acc + root->data) ||
+           hasPathSum(root->right, s, acc + root->data) ;
+}
+
+void hasPathSum_example() {
+    Node *root        = newNode(10);
+    root->left        = newNode(8);
+    root->right       = newNode(2);
+    root->left->left  = newNode(3);
+    root->left->right = newNode(5);
+    root->right->left = newNode(2);
+    cout << "Tree has a path summing 21: ";
+    cout << hasPathSum(root, 21, 0) << endl;;
+}
+
 /* ===============================================================================================*/
 int main () {
-    
+
     arrayToTree_example();
     isBST_example();
     inorderSuccessor_example();
@@ -413,7 +491,18 @@ int main () {
     commonNodes_example();
     height_example();
     size_example();
+    identical_example();
     isBalanced_example();
     leaves_example();
     printDistanceK_example();
+    rootToLeafs_example();
+    hasPathSum_example();
 }
+
+/* =======================================TODO====================================================*/
+// http://www.geeksforgeeks.org/binary-tree-to-binary-search-tree-conversion/
+// http://www.geeksforgeeks.org/find-if-there-is-a-triplet-in-bst-that-adds-to-0/
+// http://www.geeksforgeeks.org/merge-two-bsts-with-limited-extra-space/
+// http://www.geeksforgeeks.org/fix-two-swapped-nodes-of-bst/
+// http://www.geeksforgeeks.org/check-whether-binary-tree-complete-not-set-2-recursive-solution/
+// http://www.geeksforgeeks.org/given-linked-list-representation-of-complete-tree-convert-it-to-linked-representation/
