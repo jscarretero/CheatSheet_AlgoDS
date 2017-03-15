@@ -7,13 +7,12 @@ struct Node {
     int data;
     Node* left;
     Node* right;
-    Node* parent; // Normally unused, just in case
 };
 
 Node* newNode (int data) {
     Node* n = new Node;
     n->data = data;
-    n->left = n->right = n->parent = NULL;
+    n->left = n->right = NULL;
     return n;
 }
 
@@ -22,11 +21,9 @@ Node* insert (Node* root, int data) {
     if (data > root->data) {
         Node* newRightTree = insert(root->right, data);
         root->right = newRightTree;
-        newRightTree->parent = root;
     } else {
         Node* newLeftTree = insert(root->left, data);
         root->left = newLeftTree;
-        newLeftTree->parent = root;
     }
     return root;
 }
@@ -73,13 +70,6 @@ Node* arrayToTree (vector<int>& v, int l, int r) {
     return root;
 }
 
-void arrayToTree_example () {
-    vector<int> v {1,2,3,4,5,6,7}; // -std=c++11
-    cout << "Tree is: ";
-    printPreOrder ( arrayToTree(v, 0, v.size() - 1) );
-    cout << endl;
-}
-
 /*================================= Check if tree is BST ========================================*/
 // htp://www.geeksforgeeks.org/a-program-to-check-if-a-binary-tree-is-bst-or-not/
 
@@ -93,15 +83,6 @@ bool isBST (Node* root) {
 
     lastNode = root;
     return isBST(root->right);
-}
-
-void isBST_example() {
-    Node* root        = newNode(4);
-    root->left        = newNode(2);
-    root->right       = newNode(5);
-    root->left->left  = newNode(1);
-    root->left->right = newNode(3);
-    cout << "Tree is BST: " << isBST(root) << endl;
 }
 
 /* =============================== Inorder successor in BST ======================================*/
@@ -125,26 +106,6 @@ Node* inorderSuccessor(Node* root, Node* n) {
     return succ;
 }
 
-void inorderSuccessor_example() {
-    Node* root = NULL, *temp;
-
-    root = insert(root, 20);
-    root = insert(root, 8);
-    root = insert(root, 22);
-    root = insert(root, 4);
-    root = insert(root, 12);
-    root = insert(root, 10);
-    root = insert(root, 14);
-    temp = root->left->right->right;
-
-    Node* succ =  inorderSuccessor(root, temp); //tmp is 14
-    if (succ !=  NULL)
-        printf("Inorder Successor of %d is %d \n", temp->data, succ->data);
-    else
-        printf("Inorder Successor doesn't exit\n");
-
-}
-
 /* ===============================  Is a Tree Symmetric (Mirror Image) ===========================*/
 // http://www.geeksforgeeks.org/symmetric-tree-tree-which-is-mirror-image-of-itself/
 
@@ -161,19 +122,6 @@ bool isSymmetric_main (Node* root) {
     else               return true;
 }
 
-bool isSymmetric_example () {
-    Node *root         = newNode(1);
-    root->left         = newNode(2);
-    root->right        = newNode(2);
-    root->left->left   = newNode(3);
-    root->left->right  = newNode(4);
-    root->right->left  = newNode(4);
-    root->right->right = newNode(3);
-
-    cout << "Tree is symmetric: " << isSymmetric_main(root) << endl;;
-}
-
-
 /* ============================================ Mirror a Tree ====================================*/
 //http://www.geeksforgeeks.org/write-an-efficient-c-function-to-convert-a-tree-into-its-mirror-tree/
 
@@ -186,17 +134,6 @@ Node* mirrorTree(Node* root) {
     return root;
 }
 
-void mirrorTree_example() {
-    Node *root        = newNode(1);
-    root->left        = newNode(2);
-    root->right       = newNode(3);
-    root->left->left  = newNode(4);
-    root->left->right = newNode(5);
-    cout << "Mirrored tree is: ";
-    printPreOrder(mirrorTree(root));
-    cout << endl;
-}
-
 /* ====================================Minimum Depth of a Tree====================================*/
 // http://www.geeksforgeeks.org/find-minimum-depth-of-a-binary-tree/
 int minDepth(Node* root) {
@@ -204,15 +141,6 @@ int minDepth(Node* root) {
     if (!root->left)  return 1 + minDepth(root->right);
     if (!root->right) return 1 + minDepth(root->left);
     return 1 + min ( minDepth(root->left), minDepth(root->right) );
-}
-
-void minDepth_example() {
-    Node *root        = newNode(1);
-    root->left        = newNode(2);
-    root->right       = newNode(3);
-    root->left->left  = newNode(4);
-    root->left->right = newNode(5);
-    cout << "Minimum tree depth is: " << minDepth(root) << endl;
 }
 
 /* =========================Print Common Nodes in Two BST=========================================*/
@@ -267,41 +195,11 @@ vector<Node*> commonNodes (Node* t1, Node* t2) {
     return intersectArrays(a1, a2);
 }
 
-void commonNodes_example() {
-    Node *root = insert(NULL, 8);
-          root = insert(root, 6);
-          root = insert(root, 2);
-          root = insert(root, 7);
-          root = insert(root, 4);
-
-
-    Node* root2 = insert(NULL, 5);
-                  insert(root2, 9);
-                  insert(root2, 7);
-                  insert(root2, 4);
-
-    vector<Node*> res = commonNodes (root, root2);
-    cout << "Common nodes are: ";
-    for (auto& e : res)
-        cout << e->data << " ";
-    cout << endl;
-
-}
-
 /* ===========================Height of a Tree (max Depth) =======================================*/
 // http://www.geeksforgeeks.org/write-a-c-program-to-find-the-maximum-depth-or-height-of-a-tree/
 int height (Node* root) {
     if (root == NULL) return 0;
     return 1 + max ( height(root->left), height(root->right) );
-}
-
-void height_example() {
-    Node *root        = newNode(1);
-    root->left        = newNode(2);
-    root->right       = newNode(3);
-    root->left->left  = newNode(4);
-    root->left->right = newNode(5);
-    cout << "Height of tree is: " << height(root) << endl;
 }
 
 /* ==================================== Size of a Tree ===========================================*/
@@ -311,15 +209,6 @@ int size(Node* root) {
     return 1 + size(root->left) + size(root->right);
 }
 
-void size_example() {
-    Node *root        = newNode(1);
-    root->left        = newNode(2);
-    root->right       = newNode(3);
-    root->left->left  = newNode(4);
-    root->left->right = newNode(5);
-    cout << "Size of tree is: " << size(root) << endl;
-}
-
 /* ===============================Identical Trees?================================================*/
 // http://www.geeksforgeeks.org/write-c-code-to-determine-if-two-trees-are-identical/
 bool identical (Node* t1, Node* t2) {
@@ -327,21 +216,6 @@ bool identical (Node* t1, Node* t2) {
     if (!t2) return !t1;
     return (t1->data == t2->data) && identical(t1->left, t2->left) &&
                                      identical(t1->right, t2->right);
-}
-
-void identical_example() {
-    Node *root1        = newNode(1);
-    Node *root2        = newNode(1);
-    root1->left        = newNode(2);
-    root1->right       = newNode(3);
-    root1->left->left  = newNode(4);
-    root1->left->right = newNode(5);
-
-    root2->left        = newNode(2);
-    root2->right       = newNode(3);
-    root2->left->left  = newNode(4);
-    root2->left->right = newNode(5);
-    cout << "Trees are identical: " << identical(root1, root2) << endl;
 }
 
 /* ==============================Is tree balanced? ===============================================*/
@@ -365,19 +239,6 @@ bool isBalancedFast (Node* root, int& h) {
     return (is1 && is2 && ((h1 == h2) || (h1 + 1 == h2) || (h1 == h2 + 1)));
 }
 
-void isBalanced_example() {
-    Node *root             = newNode(1);
-    root->left             = newNode(2);
-    root->right            = newNode(3);
-    root->left->left       = newNode(4);
-    root->left->right      = newNode(5);
-    root->right->left      = newNode(6);
-    root->left->left->left = newNode(7);
-    //cout << "Tree is balanced: " << isBalanced(root) << endl;
-    int tmp;
-    cout << "Tree is balanced: " << isBalancedFast(root, tmp) << endl;
-}
-
 /* =========================================Count Leaves==========================================*/
 // http://www.geeksforgeeks.org/write-a-c-program-to-get-count-of-leaf-nodes-in-a-binary-tree/
 
@@ -387,16 +248,6 @@ int leaves (Node* root) {
     return leaves(root->left) + leaves(root->right);
 }
 
-void leaves_example() {
-    Node *root              = newNode(1);
-    root->left             = newNode(2);
-    root->right            = newNode(3);
-    root->left->left       = newNode(4);
-    root->left->right      = newNode(5);
-    root->right->left      = newNode(6);
-    root->left->left->left = newNode(7);
-    cout << "Number of leaves is: " << leaves(root) << endl;
-}
 /* ========================Print nodes at k distance from root====================================*/
 // http://www.geeksforgeeks.org/print-nodes-at-k-distance-from-root/
 
@@ -407,19 +258,6 @@ void printDistanceK (Node* root, int h, int c) {
         printDistanceK(root->left, h, c+1);
         printDistanceK(root->right, h, c+1);
     }
-}
-
-void printDistanceK_example() {
-    Node *root = newNode(1);
-    root->left        = newNode(2);
-    root->right       = newNode(3);
-    root->left->left  = newNode(4);
-    root->left->right = newNode(5);
-    root->right->left = newNode(8);
-
-    cout << "Nodes at distance 2 are: ";
-    printDistanceK(root,2,0);
-    cout << endl;
 }
 
 /* =============================Root-To-Leaf Paths================================================*/
@@ -444,20 +282,6 @@ void rootToLeafs (Node* root, vector<int>& curr_path) {
     }
 }
 
-void rootToLeafs_example() {
-    Node *root         = newNode(10);
-    root->left         = newNode(8);
-    root->right        = newNode(2);
-    root->left->left   = newNode(3);
-    root->left->right  = newNode(5);
-    root->right->left  = newNode(12);
-    root->right->right = newNode(20);
-
-    vector<int> current_sol;
-    cout << "Root to leaf paths are: " << endl;
-    rootToLeafs(root, current_sol);
-}
-
 /* ======================================== Path Sum==============================================*/
 // http://www.geeksforgeeks.org/root-to-leaf-path-sum-equal-to-a-given-number/
 
@@ -466,17 +290,6 @@ bool hasPathSum (Node* root, int s, int acc) {
     if (!root->left && !root->right) return (s == acc + root->data);
     return hasPathSum(root->left, s, acc + root->data) ||
            hasPathSum(root->right, s, acc + root->data) ;
-}
-
-void hasPathSum_example() {
-    Node *root        = newNode(10);
-    root->left        = newNode(8);
-    root->right       = newNode(2);
-    root->left->left  = newNode(3);
-    root->left->right = newNode(5);
-    root->right->left = newNode(2);
-    cout << "Tree has a path summing 21: ";
-    cout << hasPathSum(root, 21, 0) << endl;;
 }
 
 /* =================== Remove all nodes wich don't lie in any path with sum >= k =================*/
@@ -492,30 +305,6 @@ Node* removePathsSmaller(Node* root, int k, int s) {
     } else {
         return root;
     }
-}
-
-void removePathsSmaller_example() {
-    int k = 45;
-    Node *root                           = newNode(1);
-    root->left                           = newNode(2);
-    root->right                          = newNode(3);
-    root->left->left                     = newNode(4);
-    root->left->right                    = newNode(5);
-    root->right->left                    = newNode(6);
-    root->right->right                   = newNode(7);
-    root->left->left->left               = newNode(8);
-    root->left->left->right              = newNode(9);
-    root->left->right->left              = newNode(12);
-    root->right->right->left             = newNode(10);
-    root->right->right->left->right      = newNode(11);
-    root->left->left->right->left        = newNode(13);
-    root->left->left->right->right       = newNode(14);
-    root->left->left->right->right->left = newNode(15);
-
-    root = removePathsSmaller(root, k, 0); // k is 45
-    cout << "Tree after removing paths smaller than k: ";
-    printInOrder(root);
-    cout << endl;
 }
 
 /* ==============BST with + and - values, print ALL paths which sum to value v====================*/
@@ -545,6 +334,277 @@ void pathsSumVal (Node* root, int v, vector<int>& curr_path) {
     curr_path.pop_back();
 }
 
+/* ================Construct Tree from given Inorder and Preorder traversals =====================*/
+// http://www.geeksforgeeks.org/construct-tree-from-given-inorder-and-preorder-traversal/
+// Assuming not repeated elements
+
+Node* toTreeFromInorderPreorder(vector<int>& inorder, vector<int>& preorder, int s, int e, int& p)
+{
+    if (s > e) return NULL;
+
+    Node* root = newNode(preorder[p]);
+    p++;
+
+    // Find element in in-order traversal
+    int i;
+    for (i = s; i <= e; i++) {
+        if (inorder[i] == root->data) break;
+    }
+
+    root->left  = toTreeFromInorderPreorder (inorder, preorder, s, i - 1, p);
+    root->right = toTreeFromInorderPreorder (inorder, preorder, i + 1, e, p);
+    return root;
+}
+
+/* ===========================Print Left View of a Binary Tree====================================*/
+// http://www.geeksforgeeks.org/print-left-view-binary-tree/
+// TIP: The left view contains all nodes that are first nodes in their levels
+
+void leftView(Node* root, int& max_lev, int level) {
+    if (!root) return;
+    if (level > max_lev) {
+        max_lev = level;
+        cout << root->data << " ";
+    }
+    leftView(root->left,  max_lev, level+1);
+    leftView(root->right, max_lev, level+1);
+}
+
+/* =========================Diameter of a Binary Tree=============================================*/
+// http://www.geeksforgeeks.org/diameter-of-a-binary-tree/
+// The diameter of a tree T is the largest of the following quantities:
+//   * the diameter of T’s left subtree
+//   * the diameter of T’s right subtree
+//   * the longest path between leaves that goes through the root of T (this can be computed from
+//     the heights of the subtrees of T)
+
+int diameter (Node* root) { // Time Complexity: O(N^2) because height is calculated many times
+    if (!root) return 0;
+    int dl = diameter(root->left);
+    int dr = diameter(root->right);
+    int hl = height(root->left);
+    int hr = height(root->right);
+    return max(dl, max (dr, hl+hr+1));
+}
+
+int diameterFast (Node* root, int& h) {
+    if (!root) { h = 0; return 0; }
+
+    int hr = 0; int hl = 0;
+    int dl = diameterFast(root->left,  hl);
+    int dr = diameterFast(root->right, hr);
+    h = max(hl, hr) + 1;
+    return max(hl+hr+1, max(dl,dr));
+}
+
+/* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
+void arrayToTree_example () {
+    vector<int> v {1,2,3,4,5,6,7}; // -std=c++11
+    cout << "Tree is: ";
+    printPreOrder ( arrayToTree(v, 0, v.size() - 1) );
+    cout << endl;
+}
+void isBST_example() {
+    Node* root        = newNode(4);
+    root->left        = newNode(2);
+    root->right       = newNode(5);
+    root->left->left  = newNode(1);
+    root->left->right = newNode(3);
+    cout << "Tree is BST: " << isBST(root) << endl;
+    deleteTree(root);
+}
+void inorderSuccessor_example() {
+    Node* root = NULL, *temp;
+
+    root = insert(root, 20);
+    root = insert(root, 8);
+    root = insert(root, 22);
+    root = insert(root, 4);
+    root = insert(root, 12);
+    root = insert(root, 10);
+    root = insert(root, 14);
+    temp = root->left->right->right;
+
+    Node* succ =  inorderSuccessor(root, temp); //tmp is 14
+    if (succ !=  NULL)
+        printf("Inorder Successor of %d is %d \n", temp->data, succ->data);
+    else
+        printf("Inorder Successor doesn't exit\n");
+    deleteTree(root);
+}
+bool isSymmetric_example () {
+    Node *root         = newNode(1);
+    root->left         = newNode(2);
+    root->right        = newNode(2);
+    root->left->left   = newNode(3);
+    root->left->right  = newNode(4);
+    root->right->left  = newNode(4);
+    root->right->right = newNode(3);
+
+    cout << "Tree is symmetric: " << isSymmetric_main(root) << endl;;
+    deleteTree(root);
+}
+void mirrorTree_example() {
+    Node *root        = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    cout << "Mirrored tree is: ";
+    printPreOrder(mirrorTree(root));
+    cout << endl;
+    deleteTree(root);
+}
+void minDepth_example() {
+    Node *root        = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    cout << "Minimum tree depth is: " << minDepth(root) << endl;
+    deleteTree(root);
+}
+void commonNodes_example() {
+    Node *root = insert(NULL, 8);
+          root = insert(root, 6);
+          root = insert(root, 2);
+          root = insert(root, 7);
+          root = insert(root, 4);
+
+
+    Node* root2 = insert(NULL, 5);
+                  insert(root2, 9);
+                  insert(root2, 7);
+                  insert(root2, 4);
+
+    vector<Node*> res = commonNodes (root, root2);
+    cout << "Common nodes are: ";
+    for (auto& e : res)
+        cout << e->data << " ";
+    cout << endl;
+    deleteTree(root);
+    deleteTree(root2);
+}
+void height_example() {
+    Node *root        = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    cout << "Height of tree is: " << height(root) << endl;
+    deleteTree(root);
+}
+void size_example() {
+    Node *root        = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    cout << "Size of tree is: " << size(root) << endl;
+    deleteTree(root);
+}
+void identical_example() {
+    Node *root1        = newNode(1);
+    Node *root2        = newNode(1);
+    root1->left        = newNode(2);
+    root1->right       = newNode(3);
+    root1->left->left  = newNode(4);
+    root1->left->right = newNode(5);
+
+    root2->left        = newNode(2);
+    root2->right       = newNode(3);
+    root2->left->left  = newNode(4);
+    root2->left->right = newNode(5);
+    cout << "Trees are identical: " << identical(root1, root2) << endl;
+    deleteTree(root1);
+    deleteTree(root2);
+}
+void isBalanced_example() {
+    Node *root             = newNode(1);
+    root->left             = newNode(2);
+    root->right            = newNode(3);
+    root->left->left       = newNode(4);
+    root->left->right      = newNode(5);
+    root->right->left      = newNode(6);
+    root->left->left->left = newNode(7);
+    //cout << "Tree is balanced: " << isBalanced(root) << endl;
+    int tmp;
+    cout << "Tree is balanced: " << isBalancedFast(root, tmp) << endl;
+    deleteTree(root);
+}
+void leaves_example() {
+    Node *root              = newNode(1);
+    root->left             = newNode(2);
+    root->right            = newNode(3);
+    root->left->left       = newNode(4);
+    root->left->right      = newNode(5);
+    root->right->left      = newNode(6);
+    root->left->left->left = newNode(7);
+    cout << "Number of leaves is: " << leaves(root) << endl;
+    deleteTree(root);
+}
+void printDistanceK_example() {
+    Node *root = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    root->right->left = newNode(8);
+
+    cout << "Nodes at distance 2 are: ";
+    printDistanceK(root,2,0);
+    cout << endl;
+    deleteTree(root);
+}
+void rootToLeafs_example() {
+    Node *root         = newNode(10);
+    root->left         = newNode(8);
+    root->right        = newNode(2);
+    root->left->left   = newNode(3);
+    root->left->right  = newNode(5);
+    root->right->left  = newNode(12);
+    root->right->right = newNode(20);
+
+    vector<int> current_sol;
+    cout << "Root to leaf paths are: " << endl;
+    rootToLeafs(root, current_sol);
+    deleteTree(root);
+}
+void hasPathSum_example() {
+    Node *root        = newNode(10);
+    root->left        = newNode(8);
+    root->right       = newNode(2);
+    root->left->left  = newNode(3);
+    root->left->right = newNode(5);
+    root->right->left = newNode(2);
+    cout << "Tree has a path summing 21: ";
+    cout << hasPathSum(root, 21, 0) << endl;;
+    deleteTree(root);
+}
+void removePathsSmaller_example() {
+    int k = 45;
+    Node *root                           = newNode(1);
+    root->left                           = newNode(2);
+    root->right                          = newNode(3);
+    root->left->left                     = newNode(4);
+    root->left->right                    = newNode(5);
+    root->right->left                    = newNode(6);
+    root->right->right                   = newNode(7);
+    root->left->left->left               = newNode(8);
+    root->left->left->right              = newNode(9);
+    root->left->right->left              = newNode(12);
+    root->right->right->left             = newNode(10);
+    root->right->right->left->right      = newNode(11);
+    root->left->left->right->left        = newNode(13);
+    root->left->left->right->right       = newNode(14);
+    root->left->left->right->right->left = newNode(15);
+
+    root = removePathsSmaller(root, k, 0); // k is 45
+    cout << "Tree after removing paths smaller than k: ";
+    printInOrder(root);
+    cout << endl;
+    deleteTree(root);
+}
 void pathsSumVal_example() {
     Node *T               = newNode(26);
     T->right              = newNode(3);
@@ -557,7 +617,38 @@ void pathsSumVal_example() {
     vector<int> curr_path;
     cout << "All paths which sum to value 16: " << endl;
     pathsSumVal(T, 16, curr_path);
+    deleteTree(T);
+}
+void toTreeFromInorderPreorder_example() {
+    vector<int> in  = {3,4,5,7,8,10};
+    vector<int> pre = {5,3,4,10,8,7};
+    int ptr = 0;
+    Node *root = toTreeFromInorderPreorder(in, pre, 0, in.size() - 1, ptr);
+    cout << "Tree from inorder and preorder is (postorder traversal): ";
+    printPostOrder(root);
     cout << endl;
+}
+void leftView_example() {
+    Node *root         = newNode(12);
+    root->left         = newNode(10);
+    root->right        = newNode(30);
+    root->right->left  = newNode(25);
+    root->right->right = newNode(40);
+    int maxLevel = -1;
+    cout << "Left view is: ";
+    leftView(root, maxLevel, 0);
+    cout << endl;
+    deleteTree(root);
+}
+void diameter_example() {
+    Node *root        = newNode(1);
+    root->left        = newNode(2);
+    root->right       = newNode(3);
+    root->left->left  = newNode(4);
+    root->left->right = newNode(5);
+    int h = 0;
+    cout << "Diameter is: " << diameterFast(root, h) << endl;
+    deleteTree(root);
 }
 
 /* ===============================================================================================*/
@@ -580,6 +671,9 @@ int main () {
     hasPathSum_example();
     removePathsSmaller_example();
     pathsSumVal_example();
+    toTreeFromInorderPreorder_example();
+    leftView_example();
+    diameter_example();
 }
 
 /* =======================================TODO====================================================*/
