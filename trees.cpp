@@ -397,6 +397,119 @@ int diameterFast (Node* root, int& h) {
     return max(hl+hr+1, max(dl,dr));
 }
 
+/* =========================Convert a given tree to its Sum Tree==================================*/
+// http://www.geeksforgeeks.org/convert-a-given-tree-to-sum-tree/
+int sumTree(Node* root) {
+    if (!root) return 0;
+    if (!root->left && !root->right) {
+        int sum = root->data;
+        root->data = 0;
+        return sum;
+    }
+    int sl = sumTree(root->left);
+    int sr = sumTree(root->right);
+    int sum = root->data + sl + sr;
+    root->data =  sl + sr;
+    return sum;
+}
+
+/* ============================== Find k-th smallest element in BST ==============================*/
+// http://www.geeksforgeeks.org/find-k-th-smallest-element-in-bst-order-statistics-in-bst/
+// Tip: do in-order traversal and track current visited node
+
+Node* kSmallestNode (Node* root, int k, int& curr) {  //curr starts at 0
+    if (!root) return NULL;
+    Node* res = kSmallestNode(root->left, k, curr);
+    if (res) return res;
+    curr++;
+    if (curr == k) return root;
+    return kSmallestNode(root->right, k, curr);
+}
+
+/* ==========================Lowest Common Ancestor in a Binary Tree==============================*/
+// http://www.geeksforgeeks.org/lowest-common-ancestor-binary-tree-set-1/
+bool inTree(Node* root, int v) {
+    if (!root) return false;
+    if (root->data == v) return true;
+    return inTree(root->left, v) || inTree(root->right, v);
+}
+
+Node* lca (Node* root, int n1, int n2) {
+    if (!root) return NULL;
+
+    if ((root->data == n1) || (root->data == n2)) {
+        // Check the other node exists
+        if (!inTree(root, n1) || !inTree(root, n2)) return NULL;
+        return root;
+    }
+
+    bool in1 = inTree(root->left, n1);
+    bool in2 = inTree(root->left, n2);
+    if (in1  &&  in2) return lca(root->left, n1, n2);
+    if (!in1 && !in2) return lca(root->right, n1, n2);
+    return root;
+}
+
+/* ================================Lowest Common Ancestor in a BST================================*/
+// http://www.geeksforgeeks.org/lowest-common-ancestor-in-a-binary-search-tree/
+Node* lca_bst (Node* root, int n1, int n2) {
+    if (!root) return NULL;
+
+    if (root->data == n1) {
+        // Check the other node exists
+        if (n2 > n1) {
+            if (inTree(root->right, n2)) return root;
+            else                         return NULL;
+        } else if (n2 < n1) {
+            if (inTree(root->left, n2))  return root;
+            else                         return NULL;
+        } else                           return root;
+    } else if (root->data == n2) {
+        // Check the other node exists
+        if (n1 > n2) {
+            if (inTree(root->right, n1)) return root;
+            else                         return NULL;
+        } else if (n1 < n2) {
+            if (inTree(root->left, n1))  return root;
+            else                         return NULL;
+        } else                           return root;
+
+    }
+
+    if ((n1 < root->data) && (n2 < root->data))   return lca_bst(root->left,  n1, n2);
+    if ((n1 > root->data) && (n2 > root->data))   return lca_bst(root->right, n1, n2);
+    return root;
+}
+
+/* =======================================Is Subtree==============================================*/
+// http://www.geeksforgeeks.org/check-if-a-binary-tree-is-subtree-of-another-binary-tree/
+// http://www.geeksforgeeks.org/check-binary-tree-subtree-another-binary-tree-set-2/
+bool isSubtree(Node* t1, Node* t2) { //t2 subtree,  // TIme Complexity: O(t1*t2)
+    if (!t2) return true;
+    if (!t1) return !t2;
+
+    if (identical(t1, t2)) return true;
+    else                   return isSubtree(t1->left, t2) || isSubtree(t1->right, t2);
+}
+
+/*
+ We have discussed a O(ST) solution for this problem. In this post a O(T) solution is discussed.
+ The idea is based on the fact that inorder and preorder/postorder uniquely identify a binary tree.
+ Tree S is a subtree of T if both inorder and preorder traversals of S arw substrings of
+ inorder and preorder traversals of T respectively. :)
+ SPACE COMPLEXITY O(S+T) = O(T)
+
+Following are detailed steps.
+  1) Find inorder and preorder traversals of T, store them in two auxiliary arrays inT[] and preT[].
+  2) Find inorder and preorder traversals of S, store them in two auxiliary arrays inS[] and preS[].
+  3) If inS[] is a subarray of inT[] and preS[] is a subarray preT[], then S is a subtree of T. Else
+     not.
+     For step 3, use pattern matching algorithm. Specifically KMP algorithm for O(T) complexity
+     rather than O(S*T) of naive ones
+*/
+
+
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void arrayToTree_example () {
     vector<int> v {1,2,3,4,5,6,7}; // -std=c++11
@@ -533,7 +646,7 @@ void isBalanced_example() {
     deleteTree(root);
 }
 void leaves_example() {
-    Node *root              = newNode(1);
+    Node *root             = newNode(1);
     root->left             = newNode(2);
     root->right            = newNode(3);
     root->left->left       = newNode(4);
@@ -544,7 +657,7 @@ void leaves_example() {
     deleteTree(root);
 }
 void printDistanceK_example() {
-    Node *root = newNode(1);
+    Node *root        = newNode(1);
     root->left        = newNode(2);
     root->right       = newNode(3);
     root->left->left  = newNode(4);
@@ -650,6 +763,95 @@ void diameter_example() {
     cout << "Diameter is: " << diameterFast(root, h) << endl;
     deleteTree(root);
 }
+void sumTree_example() {
+    Node* root         = newNode(10);
+    root->left         = newNode(-2);
+    root->right        = newNode(6);
+    root->left->left   = newNode(8);
+    root->left->right  = newNode(-4);
+    root->right->left  = newNode(7);
+    root->right->right = newNode(5);
+
+    sumTree(root);
+    cout << "SumTree is: ";
+    printPreOrder(root);
+    cout << endl;
+    deleteTree(root);
+}
+void kSmallestNode_example() {
+    Node* root               = newNode(10);
+    root->left               = newNode(8);
+    root->left->left         = newNode(1);
+    root->left->right        = newNode(7);
+    root->right              = newNode(15);
+    root->right->left        = newNode(13);
+    root->right->left->left  = newNode(12);
+    root->right->left->right = newNode(14);
+    root->right->right       = newNode(20);
+
+    int curr_node = 0;
+    Node* res = kSmallestNode(root, 6, curr_node);
+    cout << "K smallest node (6th) is: " << res->data << endl;
+    delete(root);
+}
+void lca_example() {
+    Node * root        = newNode(1);
+    root->left         = newNode(2);
+    root->right        = newNode(3);
+    root->left->left   = newNode(4);
+    root->left->right  = newNode(5);
+    root->right->left  = newNode(6);
+    root->right->right = newNode(7);
+    //cout << "LCA(4, 5) of tree is: " << lca(root, 4, 5)->data << endl;
+    //cout << "LCA(4, 6) of tree is: " << lca(root, 4, 6)->data << endl;
+    //cout << "LCA(3, 4) of tree is: " << lca(root, 3, 4)->data << endl;
+    //cout << "LCA(2, 4) of tree is: " << lca(root, 2, 4)->data << endl;
+    cout << "LCA(6, 7)  of tree is: " << lca(root, 6, 7)->data << endl;
+    delete(root);
+}
+
+void lca_bst_example() {
+    Node *root               = newNode(20);
+    root->left               = newNode(8);
+    root->right              = newNode(22);
+    root->left->left         = newNode(4);
+    root->left->right        = newNode(12);
+    root->left->right->left  = newNode(10);
+    root->left->right->right = newNode(14);
+
+    Node* res = NULL;
+    int n1 = 10, n2 = 14;
+    res= lca_bst(root, n1, n2);
+    cout << "LCA(10,14) of BST is: " << res->data << endl;
+
+
+    n1 = 14, n2 = 8;
+    res = lca_bst(root, n1, n2);
+    cout << "LCA(14,8)  of BST is: " << res->data << endl;
+
+    n1 = 10, n2 = 22;
+    res = lca_bst(root, n1, n2);
+    cout << "LCA(10,22) of BST is: " << res->data << endl;
+    delete(root);
+}
+void isSubtree_example() {
+    Node *T               = newNode(26);
+    T->right              = newNode(3);
+    T->right->right       = newNode(3);
+    T->left               = newNode(10);
+    T->left->left         = newNode(4);
+    T->left->left->right  = newNode(30);
+    T->left->right        = newNode(6);
+
+    Node *S           = newNode(10);
+    S->right          = newNode(6);
+    S->left           = newNode(4);
+    S->left->right    = newNode(30);
+
+    cout << "S is subtree of T: " << isSubtree(T,S) << endl;
+    delete(T);
+    delete(S);
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -674,6 +876,11 @@ int main () {
     toTreeFromInorderPreorder_example();
     leftView_example();
     diameter_example();
+    sumTree_example();
+    kSmallestNode_example();
+    lca_example();
+    lca_bst_example();
+    isSubtree_example();
 }
 
 /* =======================================TODO====================================================*/
