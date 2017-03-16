@@ -792,7 +792,7 @@ void kSmallestNode_example() {
     int curr_node = 0;
     Node* res = kSmallestNode(root, 6, curr_node);
     cout << "K smallest node (6th) is: " << res->data << endl;
-    delete(root);
+    deleteTree(root);
 }
 void lca_example() {
     Node * root        = newNode(1);
@@ -807,7 +807,7 @@ void lca_example() {
     //cout << "LCA(3, 4) of tree is: " << lca(root, 3, 4)->data << endl;
     //cout << "LCA(2, 4) of tree is: " << lca(root, 2, 4)->data << endl;
     cout << "LCA(6, 7)  of tree is: " << lca(root, 6, 7)->data << endl;
-    delete(root);
+    deleteTree(root);
 }
 
 void lca_bst_example() {
@@ -832,7 +832,7 @@ void lca_bst_example() {
     n1 = 10, n2 = 22;
     res = lca_bst(root, n1, n2);
     cout << "LCA(10,22) of BST is: " << res->data << endl;
-    delete(root);
+    deleteTree(root);
 }
 void isSubtree_example() {
     Node *T               = newNode(26);
@@ -849,8 +849,8 @@ void isSubtree_example() {
     S->left->right    = newNode(30);
 
     cout << "S is subtree of T: " << isSubtree(T,S) << endl;
-    delete(T);
-    delete(S);
+    deleteTree(T);
+    deleteTree(S);
 }
 
 /* ===============================================================================================*/
