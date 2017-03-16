@@ -58,7 +58,6 @@ void printInOrder (Node* root) {
 
 /* ============================== Sorted Array to Balanced BST ===================================*/
 // http://www.geeksforgeeks.org/sorted-array-to-balanced-bst/
-
 Node* arrayToTree (vector<int>& v, int l, int r) {
     if (l  > r)   return NULL;
     if (l == r)   return newNode(v[l]);
@@ -72,7 +71,6 @@ Node* arrayToTree (vector<int>& v, int l, int r) {
 
 /*================================= Check if tree is BST ========================================*/
 // htp://www.geeksforgeeks.org/a-program-to-check-if-a-binary-tree-is-bst-or-not/
-
 Node* lastNode = NULL;
 
 bool isBST (Node* root) {
@@ -87,7 +85,6 @@ bool isBST (Node* root) {
 
 /* =============================== Inorder successor in BST ======================================*/
 // http://www.geeksforgeeks.org/inorder-successor-in-binary-search-tree/
-
 Node* inorderSuccessor(Node* root, Node* n) {
     if (root == NULL)  return NULL;
 
@@ -108,7 +105,6 @@ Node* inorderSuccessor(Node* root, Node* n) {
 
 /* ===============================  Is a Tree Symmetric (Mirror Image) ===========================*/
 // http://www.geeksforgeeks.org/symmetric-tree-tree-which-is-mirror-image-of-itself/
-
 bool isSymmetric (Node* t1, Node* t2) {
     if ((t1 == NULL) && (t2 == NULL))  return true;
     else if (t1 && t2 && (t1->data == t2->data)) {
@@ -124,7 +120,6 @@ bool isSymmetric_main (Node* root) {
 
 /* ============================================ Mirror a Tree ====================================*/
 //http://www.geeksforgeeks.org/write-an-efficient-c-function-to-convert-a-tree-into-its-mirror-tree/
-
 Node* mirrorTree(Node* root) {
     if (root == NULL)  return NULL;
     Node* tmpLeft  = mirrorTree(root->left);
@@ -160,7 +155,6 @@ int minDepth(Node* root) {
  * tree respectively.
  * This solution requires O(m+n) extra space
 */
-
 void treeToArray(Node* root, vector<Node*>& v) {
     if (root == NULL) return;
     treeToArray(root->left, v);
@@ -428,6 +422,7 @@ Node* kSmallestNode (Node* root, int k, int& curr) {  //curr starts at 0
 
 /* ==========================Lowest Common Ancestor in a Binary Tree==============================*/
 // http://www.geeksforgeeks.org/lowest-common-ancestor-binary-tree-set-1/
+
 bool inTree(Node* root, int v) {
     if (!root) return false;
     if (root->data == v) return true;
@@ -452,6 +447,7 @@ Node* lca (Node* root, int n1, int n2) {
 
 /* ================================Lowest Common Ancestor in a BST================================*/
 // http://www.geeksforgeeks.org/lowest-common-ancestor-in-a-binary-search-tree/
+
 Node* lca_bst (Node* root, int n1, int n2) {
     if (!root) return NULL;
 
@@ -508,7 +504,118 @@ Following are detailed steps.
      rather than O(S*T) of naive ones
 */
 
+/* ======================= Remove BST keys outside the given range ===============================*/
+// http://www.geeksforgeeks.org/remove-bst-keys-outside-the-given-range/
 
+Node* removeOutsideRange (Node* root, int min, int max) {
+    if (!root) return NULL;
+
+    root->left  = removeOutsideRange(root->left, min, max);
+    root->right = removeOutsideRange(root->right, min, max);
+
+    if (root->data < min) {
+        Node* tmp = root->right;
+        delete root;
+        return tmp;
+    } else if (root->data > max) {
+        Node* tmp = root->left;
+        delete root;
+        return tmp;
+    }
+    return root;
+}
+
+/* =========================Boundary Traversal of binary tree=====================================*/
+// http://www.geeksforgeeks.org/boundary-traversal-of-binary-tree/
+// Decompose problem in: 1) print left side without last leave
+//                       2) print leaves left-to-right
+//                       3) print right side bottom-up (stack) without root
+
+void printLeaves (Node* root) {
+    if (!root) return;
+    if (!root->left && !root->right) cout << root->data << " ";
+    printLeaves(root->left);
+    printLeaves(root->right);
+}
+
+void printLeft (Node* root) {
+    if (!root) return;
+    if (!root->left && !root->right) return;
+    cout << root->data << " ";
+    printLeft(root->left);
+}
+
+void printRight (Node* root) {
+    if (!root) return;
+    if (!root->left && !root->right) return;
+    printRight(root->right);
+    cout << root->data << " ";
+}
+
+void boundary (Node* root) {
+    if (root == NULL);
+    printLeft(root);
+    printLeaves(root);
+    printRight(root->right); //to avoid printing root again
+}
+
+/* ==========================Largest BST subtree of Normal Tree==================================*/
+// http://www.geeksforgeeks.org/find-the-largest-subtree-in-a-tree-that-is-also-a-bst/
+Node* largestBST (Node* root, int& max_size) {
+    lastNode = NULL; //reinitialize var from isBST
+    if (!root)       { max_size = 0;        return NULL; }
+    if (isBST(root)) { max_size=size(root); return root; }
+    int sl, sr;
+    Node* ll = largestBST(root->left,  sl);
+    Node* lr = largestBST(root->right, sr);
+    max_size = max(sl, sr);
+    if (sl > sr) return ll;
+    else         return lr;
+}
+
+/* ========================Level order traversal in spiral form===================================*/
+// http://www.geeksforgeeks.org/level-order-traversal-in-spiral-form/
+// TIP: print a level in a given direction
+void printLevel (Node* root, int l, bool left_to_right) {
+    if (!root) return;
+    if (l == 1) { cout << root->data << " "; return; }
+    if (left_to_right) {
+        printLevel(root->left,  l-1, left_to_right);
+        printLevel(root->right, l-1, left_to_right);
+    } else {
+        printLevel(root->right, l-1, left_to_right);
+        printLevel(root->left,  l-1, left_to_right);
+    }
+}
+
+void spiral (Node* root) {
+    int levels = height(root);
+    bool left_to_right = false;
+    for (int i = 1; i <= levels; i++) {
+        printLevel(root, i, left_to_right);
+        left_to_right = !left_to_right;
+    }
+}
+
+/* ===========================Tree to Double-Linked List==========================================*/
+// http://www.geeksforgeeks.org/in-place-convert-a-given-binary-tree-to-doubly-linked-list/
+void tree2List(Node* root, Node*& head, Node*& last_visited) {
+    if (!root) return;
+
+//    if (!root->left && !root->right) {
+//        if (!head)        head = root;
+//        if (last_visited) last_visited->right = root;
+//        root->left   = last_visited;
+//        last_visited = root;
+//    } else {
+        tree2List(root->left, head, last_visited);
+        if (!head)        head = root;
+        if (last_visited) last_visited->right = root;
+        root->left = last_visited;
+        last_visited = root;
+        tree2List(root->right, head, last_visited);
+//    }
+}
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void arrayToTree_example () {
@@ -852,6 +959,87 @@ void isSubtree_example() {
     deleteTree(T);
     deleteTree(S);
 }
+void removeOutsideRange_example() {
+    Node* root = NULL;
+    root = insert(root, 6);
+    root = insert(root, -13);
+    root = insert(root, 14);
+    root = insert(root, -8);
+    root = insert(root, 15);
+    root = insert(root, 13);
+    root = insert(root, 7);
+
+    cout << "After removing nodes outside range: ";
+    printInOrder(removeOutsideRange(root, -10, 13));
+    cout << endl;
+    deleteTree(root);
+}
+void boundary_example() {
+    Node *root                = newNode(20);
+    root->left                = newNode(8);
+    root->left->left          = newNode(4);
+    root->left->right         = newNode(12);
+    root->left->right->left   = newNode(10);
+    root->left->right->right  = newNode(14);
+    root->right               = newNode(22);
+    root->right->right        = newNode(25);
+
+    cout << "Boundary of tree is: ";
+    boundary(root);
+    cout << endl;
+    deleteTree(root);
+}
+void  largestBST_example() {
+    Node *root                = newNode(50);
+    root->left                = newNode(10);
+    root->right               = newNode(60);
+    root->left->left          = newNode(5);
+    root->left->right         = newNode(20);
+    root->right->left         = newNode(55);
+    root->right->left->left   = newNode(45);
+    root->right->right        = newNode(70);
+    root->right->right->left  = newNode(65);
+    root->right->right->right = newNode(80);
+
+    int max_size;
+    Node* res = largestBST(root, max_size);
+    cout << "Largest BST size is " << max_size << " and subtree is: ";
+    printPreOrder(res);
+    cout << endl;
+    deleteTree(root);
+}
+void spiral_example() {
+    Node *root         = newNode(1);
+    root->left         = newNode(2);
+    root->right        = newNode(3);
+    root->left->left   = newNode(7);
+    root->left->right  = newNode(6);
+    root->right->left  = newNode(5);
+    root->right->right = newNode(4);
+    cout << "Spiral Order traversal of binary tree is: ";
+    spiral(root);
+    cout << endl;
+    deleteTree(root);
+}
+void tree2List_example() {
+    Node *root        = newNode(10);
+    root->left        = newNode(12);
+    root->right       = newNode(15);
+    root->left->left  = newNode(25);
+    root->left->right = newNode(30);
+    root->right->left = newNode(36);
+
+    Node* head = NULL; Node* last_visited = NULL;
+    tree2List(root, head, last_visited );
+    cout << "List of BST is: ";
+    Node* tmp = head;
+    while (tmp != NULL){
+        cout << tmp->data << " ";
+        Node* todelete = tmp;
+        tmp = tmp->right;
+        delete todelete;
+    } cout << endl;
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -881,6 +1069,11 @@ int main () {
     lca_example();
     lca_bst_example();
     isSubtree_example();
+    removeOutsideRange_example();
+    boundary_example();
+    largestBST_example();
+    spiral_example();
+    tree2List_example();
 }
 
 /* =======================================TODO====================================================*/
