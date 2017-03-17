@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <list>
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -617,6 +618,66 @@ void tree2List(Node* root, Node*& head, Node*& last_visited) {
 //    }
 }
 
+/* ===============================Balance BST=====================================================*/
+// NOTE:  O(N log N) with O(1) space
+//        O(N)       with O(N) space if we were using arrays (direct access)
+
+Node* DLLToBalancedBST (Node* root, int s) {
+    if (!root  || !s) return NULL;
+    if (s == 1)       return root; // remove?
+
+    // Split list in half based on size 's', element at the middle does not go to any list! O(N)
+    Node* l2   = root;
+    Node* prev = NULL;
+    for (int h = (s/2)-1; h >= 0; h--) {
+        prev = l2;
+        l2 = l2 ->right;
+    }
+
+    Node* tmp = l2->right;
+    prev->right = NULL;
+    l2->left    = NULL;
+    l2->right   = NULL;
+    tmp->left   = NULL;
+
+    l2->left  = DLLToBalancedBST(root, s/2);
+    l2->right = DLLToBalancedBST(tmp,  (s%2?s/2:(s/2)-1));
+    return l2;
+}
+
+int sizeDLL (Node* root) {
+    Node* tmp = root;
+    int   res = 0;
+    while (tmp != NULL) {
+        res++;
+        tmp = tmp->right;
+    }
+    return res;
+}
+
+Node* balanceBST (Node* root) {
+    // Convert tree to DLL list
+    Node* head = NULL;
+    Node* last_visited = NULL;
+    tree2List(root, head, last_visited);
+
+    // Compute size
+    int s = sizeDLL(head);
+
+    //Call function
+    return DLLToBalancedBST(head, s);
+}
+
+/* ==========================List of Nodes at Each Depth==========================================*/
+// From 'Cracking the Coding Interview'
+void listNodesPerDepth (Node* root, vector<list<Node*> >& res , int h) {
+    if (!root) return;
+    if (res.size() < h) res.push_back(list<Node*>());
+    res[h-1].push_back(root);
+    listNodesPerDepth(root->left,  res, h+1);
+    listNodesPerDepth(root->right, res, h+1);
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void arrayToTree_example () {
     vector<int> v {1,2,3,4,5,6,7}; // -std=c++11
@@ -1040,6 +1101,45 @@ void tree2List_example() {
         delete todelete;
     } cout << endl;
 }
+void balanceBST_example() {
+    Node* root = NULL;
+    root = insert(root, 6);
+    root = insert(root, -13);
+    root = insert(root, 14);
+    root = insert(root, -8);
+    root = insert(root, 15);
+    root = insert(root, 13);
+    root = insert(root, 7);
+
+    Node* res = balanceBST(root);
+    cout << "Balanced BST is: ";
+    printPreOrder(res);
+    cout << endl;;
+    deleteTree(root);
+}
+void listNodesPerDepth_example() {
+    Node* root = NULL;
+    root = insert(root, 6);
+    root = insert(root, -13);
+    root = insert(root, 14);
+    root = insert(root, -8);
+    root = insert(root, 15);
+    root = insert(root, 13);
+    root = insert(root, 7);
+
+    vector<list<Node*> > res;
+    listNodesPerDepth(root, res , 1);
+    cout << "Lists of nodes per level are: " << endl;
+    for (auto& l: res ) {
+        cout << "\t";
+        for (auto& e: l) {
+            cout << e->data << " ";
+        }
+        cout << endl;
+    }
+    deleteTree(root);
+
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -1074,6 +1174,8 @@ int main () {
     largestBST_example();
     spiral_example();
     tree2List_example();
+    balanceBST_example();
+    listNodesPerDepth_example();
 }
 
 /* =======================================TODO====================================================*/
