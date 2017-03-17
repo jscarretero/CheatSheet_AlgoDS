@@ -45,6 +45,31 @@ void deleteList (Node* head) {
     }
 }
 
+Node* deleteNodes (Node* head, int v) {
+    Node* prev  = NULL;
+    Node* iter  = head;
+    Node* ret   = head;
+
+    while (iter) {
+        if (iter->data == v) {
+            if (prev) {
+                prev->next = iter->next;
+                delete iter;
+                iter = prev->next;
+            } else {
+                Node* tmp = iter->next;
+                delete iter;
+                iter = tmp;
+                ret = tmp;
+            }
+        } else {
+            prev = iter;
+            iter = iter->next;
+        }
+    }
+    return ret;
+}
+
 void printList (Node* head) {
     Node* n = head;
     while (n) {
@@ -230,6 +255,109 @@ void removeDuplicatesWithHash (Node* head) {
     }
 }
 
+/* =================================Kth to Last Element of Lis====================================*/
+// From "Cracking the code interview"
+Node* kthToLast (Node* head, int k) {
+    Node* ptr1 = head;
+    Node* ptr2 = head;
+    int i = 0;
+    while (ptr2 && (i < k)) {
+        ptr2 = ptr2->next;
+        i++;
+    }
+    if (!ptr2) return NULL;
+    while (ptr2) {
+        ptr2 = ptr2->next;
+        ptr1 = ptr1->next;
+    }
+    return ptr1;
+}
+
+/* =============================Delete Element Middle List========================================*/
+// http://www.geeksforgeeks.org/in-a-linked-list-given-only-a-pointer-to-a-node-to-be-deleted-in-a-\
+//                              singly-linked-list-how-do-you-delete-it/
+bool deleteMiddle (Node* n) {
+    if (!n)       return true;
+    if (!n->next) return false;
+    Node* tmp = n->next;
+    n->data   = tmp->data;
+    n->next   = tmp->next;
+    delete tmp;
+    return true;
+}
+
+/* =============================Partition List Around Value v=====================================*/
+// http://www.geeksforgeeks.org/partitioning-a-linked-list-around-a-given-value-and-keeping-the-\
+//                              original-order/
+// TIP: Create 3 lists: one with elements <, one with elements =, one with elements >
+//      Keep head and tail pointers, then concatenate!
+// NOTE: Can also be done with 2 lists BTW (one with elements >=, or <=, you choose)
+
+Node* partitionStable (Node* head, int v) {
+    Node* lowerHead = NULL;
+    Node* lowerTail = NULL;
+    Node* equalHead = NULL;
+    Node* equalTail = NULL;
+    Node* higherHead = NULL;
+    Node* higherTail = NULL;
+
+    Node* iter = head;
+    while (iter) {
+        if (iter->data < v) {
+            if (!lowerHead) lowerHead = iter;
+            if (lowerTail)  lowerTail->next = iter;
+            lowerTail = iter;
+        } else if (iter->data > v) {
+            if (!higherHead) higherHead = iter;
+            if (higherTail)  higherTail->next = iter;
+            higherTail = iter;
+        } else {
+            if (!equalHead) equalHead = iter;
+            if (equalTail)  equalTail->next = iter;
+            equalTail = iter;
+        }
+        iter = iter->next;
+    }
+
+    if (lowerTail)  lowerTail->next  = NULL;
+    if (higherTail) higherTail->next = NULL;
+    if (equalTail)  equalTail->next  = NULL;
+
+    //Connect Lists
+    if (lowerTail) {
+        if (equalHead)        lowerTail->next = equalHead;
+        else if (higherHead)  lowerTail->next = higherHead;
+    }
+    if (equalTail) {
+        if (higherHead)        equalTail->next = higherHead;
+    }
+
+    if (lowerHead)      return lowerHead;
+    else if (equalTail) return equalHead;
+    else                return higherHead;
+}
+
+Node* partition (Node* n, int v) {
+    Node* head = NULL;
+    Node* glue = NULL;
+    Node* tail = NULL;
+    Node* iter = n;
+    while (iter) {
+        Node* tmp = iter->next;
+        if (iter->data < v) {
+            iter->next = head;
+            if (!glue) glue = iter;
+            head = iter;
+        } else {
+            iter->next = tail;
+            tail = iter;
+        }
+        iter = tmp;
+    }
+    if (glue) glue->next = tail;
+    return head;
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void split_example() {
     Node* head = buildList(20);
@@ -262,7 +390,6 @@ void mergeSortedLists_example() {
     cout << "\t"; printList(res);
     deleteList(res);
 }
-
 void mergeSortedListsRecursive_example() {
     Node* head = buildList(20);
     Node* l1; Node* l2;
@@ -275,7 +402,6 @@ void mergeSortedListsRecursive_example() {
     cout << "\t"; printList(res);
     deleteList(res);
 }
-
 void reverse_example() {
     Node* head = buildList(20);
           head = reverse(head);
@@ -283,7 +409,6 @@ void reverse_example() {
     cout << "\t"; printList(head);
     deleteList(head);
 }
-
 void mergeSort_example() {
     Node* head = buildRandomList(20);
     cout << "Merge-Sorted list is: " << endl;
@@ -291,7 +416,6 @@ void mergeSort_example() {
     cout << "\t"; printList(head);
     deleteList(head);
 }
-
 void removeDuplicates_example() {
     Node* head = buildRandomList(30);
     cout << "Removed duplicates: " << endl;
@@ -309,7 +433,6 @@ void removeDuplicates_example() {
     deleteList(copy);
     deleteList(copy2);
 }
-
 void removeDuplicatesWithHash_example() {
     Node* head = buildRandomList(30);
     cout << "Removed duplicates with Hash Table: " << endl;
@@ -327,7 +450,45 @@ void removeDuplicatesWithHash_example() {
     deleteList(copy);
     deleteList(copy2);
 }
+void kthToLast_example() {
+    Node* head = buildRandomList(10);
+          head = mergeSort(head);
+    Node* res = kthToLast(head, 5);
+    cout << "K-th to Last for k=5 is: ";
+    cout << "\t"; printList(res);
+    deleteList(head);
+}
+void deleteMiddle_example() {
+    Node* head = buildList(10);
+          head = mergeSort(head);
+    deleteMiddle(head->next->next);
+    cout << "List after delete node pointer: "; printList(head);
+    deleteList(head);
+}
+void partitionStable_example() {
+    Node* head = buildRandomList(30);
+    cout << "List stable pre-partition is: "; printList(head);
+    head = partitionStable(head, 52);
+    cout << "List stable post-partition (val=52) and concat is : ";
+    printList(head);
+    deleteList(head);
+}
+void partition_example() {
+    Node* head = buildRandomList(30);
+    cout << "List pre-partition is: "; printList(head);
+    head = partition(head, 52);
+    cout << "List post-partition (val=52) and concat is : ";
+    printList(head);
+    deleteList(head);
+}
 
+void deleteNodes_example() {
+    Node* head = buildRandomList(30);
+    head = deleteNodes(head, 52);
+    cout << "List after eliminating all nodes with value 52 is: ";
+    printList(head);
+    deleteList(head);
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -339,6 +500,11 @@ int main () {
     mergeSort_example();
     removeDuplicates_example();
     removeDuplicatesWithHash_example();
+    kthToLast_example();
+    deleteMiddle_example();
+    partitionStable_example();
+    partition_example();
+    deleteNodes_example();
 }
 
 /* =======================================TODO====================================================*/
