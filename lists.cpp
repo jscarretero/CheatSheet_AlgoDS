@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set> //c++11
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -35,7 +36,6 @@ Node* buildList (int num) {
     return last;
 }
 
-
 void deleteList (Node* head) {
     Node* n = head;
     while (n) {
@@ -62,6 +62,21 @@ int size (Node* head) {
         res++;
     }
     return res;
+}
+
+Node* copyList (Node* head) {
+    Node* iter  = head;
+    Node* prev  = NULL;
+    Node* start = NULL;
+
+    while (iter) {
+        Node* n = newNode(iter->data);
+        if (!start)  start      = n;
+        if (prev)    prev->next = n;
+        prev = n;
+        iter = iter->next;
+    }
+    return start;
 }
 
 /* =============================Split List in Two Halves==========================================*/
@@ -154,6 +169,67 @@ Node* reverse (Node* head) {
     return prev;
 }
 
+/* =======================================Merge Sort==============================================*/
+Node* mergeSort (Node* head) {
+
+    // COST: O(N*logN) [split requires O(N) time]
+
+    if (!head || !head->next) return head; // base case is no element or 1 element, already sorted
+
+    Node* list2      = split(head);
+    Node* list1      = head;
+    Node* sorted_l1  = mergeSort(head);
+    Node* sorted_l2  = mergeSort(list2);
+    return mergeSortedLists(sorted_l1, sorted_l2);
+}
+
+/* ==========================Remove duplicates from unsorted list================================ */
+// http://www.geeksforgeeks.org/remove-duplicates-from-an-unsorted-linked-list/
+void removeDuplicates (Node* head) {
+    // Time: O(N^2)
+    Node* ptr1  = head;
+
+    while (ptr1) {
+        Node* ptr2  = ptr1->next;
+        Node* prev  = ptr1;
+        while (ptr2) {
+            if (ptr2->data == ptr1->data) {
+                Node* tmp = ptr2->next;
+                prev->next = tmp;
+                delete ptr2;
+                ptr2 = tmp;
+            } else {
+                prev = ptr2;
+                ptr2 = ptr2->next;
+            }
+        }
+        ptr1 = ptr1->next;
+    }
+}
+
+void removeDuplicatesWithHash (Node* head) {
+    // Time: O(N), space O(N)
+    // Unordered_set works as a hash table. Introduced in C++11. Also unordered_map.
+    // http://en.cppreference.com/w/cpp/container/unordered_set
+    unordered_set<int> hashTable;
+
+    Node* ptr  = head;
+    Node* prev = NULL;
+    while (ptr) {
+        if (hashTable.find(ptr->data) != hashTable.end()) {
+            // Value found
+            Node* tmp = ptr->next;
+            prev->next = tmp; // No need to check prev is not NULL, because duplicate is at pos >=2
+            delete ptr;
+            ptr        = tmp;
+        } else { //Not found
+            hashTable.insert(ptr->data);
+            prev = ptr;
+            ptr  = ptr->next;
+        }
+    }
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void split_example() {
     Node* head = buildList(20);
@@ -208,6 +284,51 @@ void reverse_example() {
     deleteList(head);
 }
 
+void mergeSort_example() {
+    Node* head = buildRandomList(20);
+    cout << "Merge-Sorted list is: " << endl;
+    head = mergeSort(head);
+    cout << "\t"; printList(head);
+    deleteList(head);
+}
+
+void removeDuplicates_example() {
+    Node* head = buildRandomList(30);
+    cout << "Removed duplicates: " << endl;
+    cout << "\tBefore unsorted: "; printList(head);
+    Node* copy = copyList(head);
+          copy = mergeSort(copy);
+    cout << "\tBefore sorted  : "; printList(copy);
+
+    removeDuplicates(head);
+    cout << "\tAfter unsorted : "; printList(head);
+    Node* copy2 = copyList(head);
+          copy2 = mergeSort(copy2);
+    cout << "\tAfter sorted   : "; printList(copy2);
+    deleteList(head);
+    deleteList(copy);
+    deleteList(copy2);
+}
+
+void removeDuplicatesWithHash_example() {
+    Node* head = buildRandomList(30);
+    cout << "Removed duplicates with Hash Table: " << endl;
+    cout << "\tBefore unsorted: "; printList(head);
+    Node* copy = copyList(head);
+          copy = mergeSort(copy);
+    cout << "\tBefore sorted  : "; printList(copy);
+
+    removeDuplicatesWithHash(head);
+    cout << "\tAfter unsorted : "; printList(head);
+    Node* copy2 = copyList(head);
+          copy2 = mergeSort(copy2);
+    cout << "\tAfter sorted   : "; printList(copy2);
+    deleteList(head);
+    deleteList(copy);
+    deleteList(copy2);
+}
+
+
 /* ===============================================================================================*/
 int main () {
     split_example();
@@ -215,6 +336,9 @@ int main () {
     mergeSortedLists_example();
     mergeSortedListsRecursive_example();
     reverse_example();
+    mergeSort_example();
+    removeDuplicates_example();
+    removeDuplicatesWithHash_example();
 }
 
 /* =======================================TODO====================================================*/
