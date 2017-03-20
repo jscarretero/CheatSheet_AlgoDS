@@ -13,22 +13,13 @@ Code uses some C++11 features. In case you forgot, to compile a file you have to
 ### Suggested study order
 Study and check the source code of the files using this suggested order:
      
-**01.** `arrays.cpp` 
-
-**02.** `strings.cpp` 
-
-**03.** `bits.cpp` 
-
-**04.** `stacks.cpp` 
-
-**05.** `trees.cpp` 
-
-**06.** `lists.cpp` 
-
-**07.** `search_sort.cpp` (WIP) 
-
-**08.** `graphs.cpp` (WIP) 
-
-**09.** `backtrack.cpp` (WIP) 
-
-**10.** `dynamicprogramming.cpp` (WIP) 
+1. `arrays.cpp` 
+2. `strings.cpp` 
+3. `bits.cpp` 
+4. `stacks.cpp` 
+5. `trees.cpp` 
+6. `lists.cpp` 
+7. `search_sort.cpp` (WIP) 
+8. `graphs.cpp` (WIP) 
+9. `backtrack.cpp` (WIP) 
+10. `dynamicprogramming.cpp` (WIP) 
