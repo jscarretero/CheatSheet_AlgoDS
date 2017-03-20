@@ -10,7 +10,7 @@ Code uses some C++11 features. In case you forgot, to compile a file you have to
     g++ -std=c++11 trees.cpp -o trees
     ./trees
 
-###Suggested study order
+### Suggested study order
 Study and check the source code of the files using this suggested order:
      
 **01.** `arrays.cpp`
