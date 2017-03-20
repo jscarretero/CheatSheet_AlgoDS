@@ -1,7 +1,9 @@
 Algorithms and Data Structures Cheat Sheet
 ------------------------------------------
 Tired and afraid of having to read thick books on how to prepare for coding interviews?
+
 This repo holds a good starting point of common coding problems asked during technical interviews. 
+
 Small, simple, fast and right to the important parts (as long as you have a basic background on algorithms, data structures and C++).
 
 ### How to compile a file
