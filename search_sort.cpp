@@ -7,6 +7,7 @@ using namespace std;
 
     // TODO: merge two sorted arrays, given another one with enough space
     // QUICKSTORT, MERGESORT IN ARRAY too
+
 // http://www.geeksforgeeks.org/segregate-0s-and-1s-in-an-array-by-traversing-array-once/
 // http://www.geeksforgeeks.org/sort-an-array-of-0s-1s-and-2s/
 // https://sites.google.com/site/spaceofjameschen/home/sort-and-search/dutch-national-flag
@@ -36,6 +37,21 @@ void pairsDifferingK (vector<int>& arr, int k) { // O(N) time, O(1) space
 /* =========================All pairs summing to value K in a vector==============================*/
 // Not necessarily sorted vector, no repeating pairs
 
+void pairsSummingK (vector<int>& arr, int k) {
+    // O(N) time, O(N) space
+
+    unordered_map<int, list<int> > val_pos;
+    for (int i = 0; i < arr.size(); i++)
+    {
+        if (  val_pos.find( k - arr[i] ) != val_pos.end() ) {
+            list<int>& l = val_pos[ k - arr[i]];
+            for (auto& e: l)
+                    cout << "(" << e << ", " << i << ") ";
+        }
+        val_pos[arr[i]].push_back(i);
+    }
+}
+
 void pairsSummingK_ (vector<int>& arr, int k) {
     // O(N*logN) time, O(1) space, modifies vector!
     // WARNING: pair indexes are different to original arr before sorting
@@ -53,20 +69,6 @@ void pairsSummingK_ (vector<int>& arr, int k) {
     }
 }
 
-void pairsSummingK (vector<int>& arr, int k) {
-    // O(N) time, O(N) space
-
-    unordered_map<int, list<int> > val_pos;
-    for (int i = 0; i < arr.size(); i++)
-    {
-        if (  val_pos.find( k - arr[i] ) != val_pos.end() ) {
-            list<int>& l = val_pos[ k - arr[i]];
-            for (auto& e: l)
-                    cout << "(" << e << ", " << i << ") ";
-        }
-        val_pos[arr[i]].push_back(i);
-    }
-}
 
 /* ===========================Given an array of pairs, find all symmetric pairs===================*/
 // http://www.geeksforgeeks.org/given-an-array-of-pairs-find-all-symmetric-pairs-in-it/
@@ -154,14 +156,13 @@ void maxOfMin (vector<int>& array) {
         }
         cout << window_max << ", ";
     }
-
 }
 
 /* =========================Maximum Sum in Contiguous Subarray====================================*/
 // http://www.geeksforgeeks.org/largest-sum-contiguous-subarray/
 // http://karmaandcoding.blogspot.com.es/2011/03/maximum-contiguous-sum-in-array.html
 
-int MCS (vector<int>& array, int& s, int& e) {
+int maxSumSubarray (vector<int>& array, int& s, int& e) {
     // O(N) time, O(1) space
     // IDEA: when we find a negative sum at a given position, if we increase the subarray we will
     //       not find a biggest sum. Therefore we can start considering a new subarray in the next
@@ -188,6 +189,154 @@ int MCS (vector<int>& array, int& s, int& e) {
     }
     s = max_start; e = max_end;
     return max_sum;
+}
+
+/* =======================Find Subarray with Given Sum V (non-negative contents)==================*/
+// http://www.geeksforgeeks.org/find-subarray-with-given-sum/
+// Note: non-negative numbers, non sorted array
+
+void findSubarrayGivenSum_Positive (vector<int>& array, int v, int& s, int& e) {
+    // O(N) time, O(1) space
+
+    int curr_start = 0;
+    int curr_sum   = 0;
+    bool found     = false;
+
+    for (int i = 0; i < array.size()  && !found; i++) {
+        curr_sum += array[i];
+        if (curr_sum > v) {
+            // If curr_sum exceeds value, then when move curr_start pointer either until we find
+            // the sum value, or until curr_start overpasses i.
+            // curr_sum is increasing
+            while ((curr_start <= i) && (curr_sum > v)) {
+                curr_sum -= array[curr_start];
+                curr_start++;
+            }
+        }
+        if (curr_sum == v) { found = true; s = curr_start; e = i;}
+    }
+
+    if (!found) { s= array.size() - 1; e = 0; }
+}
+
+void findSubarrayGivenSum_Positive_ (vector<int>& array, int v, int& s, int& e) { //inefficient
+    // O(N^2) time, O(1) space
+    bool found    = false;
+
+    for (int i = 0; i < array.size() && !found; i++) {
+        int  curr_sum = 0;
+        for (int j = i; (j < array.size()) && !found; j++) {
+            curr_sum = curr_sum + array[j];
+            if (curr_sum == v) {
+                s = i; e = j;
+                found = true;
+            }
+        }
+    }
+    if (!found ) { s = array.size() - 1; e = 0; }
+}
+
+/* ======================Find Subarray with Given Sum V (with negative contents)==================*/
+// http://www.geeksforgeeks.org/find-subarray-with-given-sum-in-array-of-integers/
+// Extension of above one
+
+void findSubarrayGivenSum (vector<int>& array, int v, int& s, int& e ) {
+    // O(N) time, O(N) space
+
+    // IDEA: Iterate over all positions and accumulate the sum, if at a given index we have a sum x
+    //       then we can find in a map if there has been a position whose accumulated value from pos
+    //       0 is x-s . If we don't include that prefix subarray, then the sum would be x-(x-s) = s
+    //
+
+    unordered_map<int,int> prefix_sum; // key is accumulated sum and value is array index when this
+                                       // accumulated sum was observed
+    int accum_sum = 0;
+    bool found    = false;
+
+    for (int i = 0; i < array.size() && !found; i++) {
+        accum_sum += array[i];
+        if (accum_sum == v) { s = 0; e = i; found = true; }
+        else {
+            int offset = accum_sum - v;
+            if (prefix_sum.find(offset) != prefix_sum.end()) {
+                s = prefix_sum[offset] + 1;
+                e = i;
+                found = true; //break
+            }  else {
+                // We keep the longest subarray (first positions are memorized) )
+                if (prefix_sum.find(accum_sum) == prefix_sum.end()) {
+                    prefix_sum[accum_sum] = i;
+                }
+            }
+        }
+    }
+    if (!found) { s = array.size() - 1 ; e = 0; }
+}
+
+
+/* =========================Find LARGEST Subarray with 0 Sum======================================*/
+// Very similar to previous one, V=0, but we need the largest one
+// http://www.geeksforgeeks.org/find-the-largest-subarray-with-0-sum/
+
+int bigestSubarraySummingZero (vector<int>& array, int& s, int& e) {
+    // O(N) time, O(N) space
+
+    unordered_map<int,int> prefix_sum;
+    int max_len   = 0;
+    int accum_sum = 0;
+
+    s = array.size() - 1;
+    e = 0;
+
+    for (int i = 0; i < array.size(); i++) {
+        accum_sum += array[i];
+        if (accum_sum == 0) { max_len = i; s = 0; e = i; }
+        else {
+            int offset = accum_sum - 0; //redundant, but added to show similarity wrt previous probl.
+            if (prefix_sum.find(offset) != prefix_sum.end()) {
+                if (  ( i - (prefix_sum[offset]+1) + 1)  > max_len) {
+                    max_len =  i - (prefix_sum[offset] + 1) + 1;
+                    s = prefix_sum[offset] + 1;
+                    e = i;
+                }
+            } else {
+                prefix_sum[accum_sum] = i;
+            }
+        }
+    }
+    return max_len;
+}
+
+int bigestSubarraySummingZero_ (vector<int>& array, int& s, int& e) {
+    // O(N^2) time
+    int max_len = 0;
+    s = array.size() - 1;
+    e = 0;
+
+    for (int i = 0 ; i < array.size(); i++) {
+        int curr_sum = 0;
+        for (int j = i; j < array.size(); j++) {
+            curr_sum += array[j];
+            if (curr_sum == 0) {
+                if ((j-i + 1) > max_len) { max_len = j-i + 1;  s = i; e = j; }
+            }
+        }
+    }
+}
+
+/* =========================Find a Fixed Point in a given array===================================*/
+// http://www.geeksforgeeks.org/find-a-fixed-point-in-a-given-array/
+// Assume SORTED & UNIQUE elements!
+
+int fixedPoint (vector<int>& array, int s, int e) {
+    // O(N log N), divide & conquer, based on binary search T(N) = T(N/2) + 1
+    if (s > e) return -1;
+
+    int h = s + (e - s + 1) / 2 ; // (2s + e -s + 1)/2 == (s + e +1 )/2
+
+    if      (array[h] == h)       return h;
+    else if (array[h] >  h)       return fixedPoint(array, s, h-1);
+    else                          return fixedPoint(array, h+1, e);
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -219,15 +368,39 @@ void maxOfMin_example() {
     cout << "Maxim value of minimum value for all window sizes are : "; maxOfMin(v);
     cout << endl;
 }
-void MCS_example() {
+void maxSumSubarray_example() {
     vector<int> v1 = {5,7,-3,1,-11,8,12};
     vector<int> v2 = {3,-2,4,-2,-3,5,-6,7,-3,-2,-1,-8};
     int s, e;
-    int res = MCS(v1, s, e);
+    int res = maxSumSubarray(v1, s, e);
     cout << "Max Contiguous Sum is : " << res << " starting at " << s << " ending at " << e << endl;
-        res = MCS(v2, s, e);
+        res = maxSumSubarray(v2, s, e);
     cout << "Max Contiguous Sum is : " << res << " starting at " << s << " ending at " << e << endl;
 }
+void findSubarrayGivenSum_Positive_example() {
+    vector<int> v = {15, 2, 4, 8, 9, 5, 10, 23};
+    int s, e;
+    findSubarrayGivenSum_Positive(v, 23, s, e);
+    cout << "Subarray with sum 23 is between : " << s << " and " << e << endl;
+}
+void findSubarrayGivenSum_example() {
+    vector<int> v = {1, -3, 4, 8, 2, -14, 3, -1, 10, 6};
+    int s, e;
+    findSubarrayGivenSum(v, 9, s, e);
+    cout << "Subarray with sum 9 is between : " << s << " and " << e << endl;
+}
+void bigestSubarraySummingZero_example() {
+    vector<int> v = {15, -2, 2, -8, 1, 7, 10, 23};
+    int s, e;
+    bigestSubarraySummingZero (v, s, e);
+    cout << "Biggest subarray with sum 0 is between : " << s << " and " << e << endl;
+}
+void fixedPoint_example() {
+    vector<int> v= {-10, -1, 0, 3, 10, 11, 30, 50, 100};
+    int res = fixedPoint(v, 0, v.size() - 1);
+    cout << "Fixed point for array is : " << res << endl;
+}
+
 /* ===============================================================================================*/
 int main () {
     pairsDifferingK_example();
@@ -235,8 +408,14 @@ int main () {
     symmetricPairs_example();
     unsortedSubarray_example();
     maxOfMin_example();
-    MCS_example();
+    maxSumSubarray_example();
+    findSubarrayGivenSum_Positive_example();
+    findSubarrayGivenSum_example();
+    bigestSubarraySummingZero_example();
+    fixedPoint_example();
 }
 
 /* =======================================TODO====================================================*/
-
+// SEARCH AND SORTING: http://www.geeksforgeeks.org/fundamentals-of-algorithms/#SearchingandSorting
+// NICE link: http://www.nayuki.io/page/master-theorem-solver-javascript
+//            http://www.cs.unipr.it/purrs/
