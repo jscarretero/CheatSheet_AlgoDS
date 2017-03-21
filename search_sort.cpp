@@ -5,9 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-    // TODO: merge two sorted arrays, given another one with enough space
-    // QUICKSTORT, MERGESORT IN ARRAY too
-
+// QUICKSTORT, MERGESORT IN ARRAY too
 // http://www.geeksforgeeks.org/segregate-0s-and-1s-in-an-array-by-traversing-array-once/
 // http://www.geeksforgeeks.org/sort-an-array-of-0s-1s-and-2s/
 // https://sites.google.com/site/spaceofjameschen/home/sort-and-search/dutch-national-flag
@@ -273,7 +271,6 @@ void findSubarrayGivenSum (vector<int>& array, int v, int& s, int& e ) {
     if (!found) { s = array.size() - 1 ; e = 0; }
 }
 
-
 /* =========================Find LARGEST Subarray with 0 Sum======================================*/
 // Very similar to previous one, V=0, but we need the largest one
 // http://www.geeksforgeeks.org/find-the-largest-subarray-with-0-sum/
@@ -339,6 +336,93 @@ int fixedPoint (vector<int>& array, int s, int e) {
     else                          return fixedPoint(array, h+1, e);
 }
 
+/* =================Given 2 sorted arrays A & B, merge them into B (enough space provided)========*/
+void mergeArrays (int a[], int b[], int sizeA, int sizeB) {
+    // TIP: start from end
+    int ptrM = sizeA + sizeB - 1;
+    int ptrA = sizeA - 1;
+    int ptrB = sizeB - 1;
+
+    while (ptrA >= 0  && ptrB >= 0) {
+        if (a[ptrA] > b[ptrB])  { b[ptrM] = a[ptrA]; ptrA--; }
+        else                    { b[ptrM] = b[ptrB]; ptrB--; }
+        ptrM--;
+    }
+
+    for (int i = ptrA; i >= 0; i--) {
+        b[ptrM] = a[i];
+        ptrM--;
+    }
+}
+
+/* =================Given 2 sorted arrays A & B, merge them in-place O(1) space===================*/
+// http://www.geeksforgeeks.org/merge-two-sorted-arrays-o1-extra-space/
+// Initial numbers (after complete sorting) are in the first array and the remaining numbers are in
+// the second array
+void mergeInPlace(int* ar1, int* ar2, int m, int n)
+{
+    // O(m * n) time! That's why mergesort is not used for arrays, unless O(N/2) space used
+    // The worst case occurs when all elements of ar1[] are greater than all elements of arb2[]
+
+    /*
+       The idea is to begin from last element of ar2[] and search it in ar1[]. If there is a greater
+       element in ar1[], then we move last element of ar1[] to ar2[].
+       To keep ar1[] and ar2[] sorted, we need to place last element of ar2[] at correct place in
+       ar1[]. We can use Insertion Sort type of insertion for this
+    */
+
+    // Iterate through all elements of ar2[] starting from the last element
+    for (int i = n - 1; i >= 0; i--) {
+        /* Find the smallest element greater than ar2[i]. Move all elements one position ahead till
+           the smallest greater element is not found */
+        int j, last = ar1[m-1];
+        for (j = m - 2; j >= 0 && ar1[j] > ar2[i]; j--)
+            ar1[j + 1] = ar1[j];
+
+        // If there was a greater element
+        if (j != m - 2 || last > ar2[i]) {
+            ar1[j + 1] = ar2[i];
+            ar2[i]     = last;
+        }
+    }
+}
+
+/* ==========================Search in a row-wise and column-wise sorted matrix===================*/
+// http://www.geeksforgeeks.org/search-in-row-wise-and-column-wise-sorted-matrix/
+
+#define N 4
+pair<int,int> searchSortedMatrix (int array[N][N], int val) {
+    // O(N) time, O(1) space
+    // TIP: start from top-right element
+    int i = 0; int j = N-1;
+    while (i < N && j >= 0) {
+        if       ( array[i][j] > val ) j--;
+        else if  ( array[i][j] < val ) i++;
+        else     return make_pair(i, j);
+    }
+
+    return make_pair(-1,-1);
+}
+
+/* ========================Given Two Arrays, Find Element That Has been Deleted===================*/
+// http://www.geeksforgeeks.org/find-lost-element-from-a-duplicated-array/
+// http://www.geeksforgeeks.org/find-the-missing-number/
+
+int findMissing (vector<int>& array1, vector<int>& array2) {
+    // Arrays are not in same order
+    // O(N) time
+    int checksumA = 0;
+    for (int i = 0; i < array1.size(); i++)
+        checksumA = checksumA ^ array1[i];
+
+    int checksumB = 0;
+    for (int i = 0; i < array2.size(); i++)
+        checksumB = checksumB ^ array2[i];
+
+    return checksumB ^ checksumA;
+}
+
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void pairsDifferingK_example() {
     vector<int> v = {1,2,3,5,6,7,9,11,12,13};
@@ -400,6 +484,43 @@ void fixedPoint_example() {
     int res = fixedPoint(v, 0, v.size() - 1);
     cout << "Fixed point for array is : " << res << endl;
 }
+void mergeArrays_example() {
+    int a[] = {3,4,5,22,40};
+    int b[] = {1,2,11,15,20,54,-1,-1,-1,-1,-1};
+    int n = sizeof(a)/sizeof(a[0]);
+    int m = (sizeof(b)/sizeof(b[0])) - n;
+    mergeArrays(a,b,n,m);
+    cout << "Merged arrays is: ";
+    for (int i = 0; i < n+m; i++) {
+        cout << b[i] << " ";
+    }
+    cout << endl;
+}
+void mergeInPlace_example() {
+    int a[] = {3,4,5,22,40};
+    int b[] = {1,2,11,15,20,54};
+    mergeInPlace(a,b,5,6);
+    cout << "Merged arrays are: ";
+    for (int i = 0; i < sizeof(a)/sizeof(a[0]); i++) cout << a[i] << " ";
+    cout << " | ";
+    for (int i = 0; i < sizeof(b)/sizeof(b[0]); i++) cout << b[i] << " ";
+    cout << endl;
+}
+void searchSortedMatrix_example() {
+    int mat[N][N] = { {10, 20, 30, 40},
+                      {15, 25, 35, 45},
+                      {27, 29, 37, 48},
+                      {32, 33, 39, 50},
+                    };
+    pair<int,int> res = searchSortedMatrix(mat, 29);
+    cout << "Found element 29 in matrix position : (" << res.first << ", " << res.second << ")";
+    cout << endl;
+}
+void findMissing_example() {
+    vector<int> v1 = {9,1,3,7,2,-2,-3};
+    vector<int> v2 = {-2,7,-3,2,9,1};
+    cout << "Missing element between two arrays is: " << findMissing(v1, v2) << endl;
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -413,6 +534,10 @@ int main () {
     findSubarrayGivenSum_example();
     bigestSubarraySummingZero_example();
     fixedPoint_example();
+    mergeArrays_example();
+    mergeInPlace_example();
+    searchSortedMatrix_example();
+    findMissing_example();
 }
 
 /* =======================================TODO====================================================*/
