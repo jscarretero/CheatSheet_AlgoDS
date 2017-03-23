@@ -5,7 +5,6 @@
 #include <algorithm>
 using namespace std;
 
-// QUICKSTORT, MERGESORT IN ARRAY too
 // http://www.geeksforgeeks.org/segregate-0s-and-1s-in-an-array-by-traversing-array-once/
 // http://www.geeksforgeeks.org/sort-an-array-of-0s-1s-and-2s/
 // https://sites.google.com/site/spaceofjameschen/home/sort-and-search/dutch-national-flag
@@ -394,7 +393,7 @@ void mergeInPlace(int* ar1, int* ar2, int m, int n)
 pair<int,int> searchSortedMatrix (int array[N][N], int val) {
     // O(N) time, O(1) space
     // TIP: start from top-right element
-    int i = 0; int j = N-1;
+    int i = 0; int j = N - 1;
     while (i < N && j >= 0) {
         if       ( array[i][j] > val ) j--;
         else if  ( array[i][j] < val ) i++;
@@ -404,12 +403,69 @@ pair<int,int> searchSortedMatrix (int array[N][N], int val) {
     return make_pair(-1,-1);
 }
 
+/* ===============================Binary Search===================================================*/
+// http://www.geeksforgeeks.org/problem-binary-search-implementations/
+// Array is sorted
+
+int binarySearch_ (vector<int>& array, int s, int e, int v) { //Recursive
+    // O(log N) time
+
+    if (s > e) return -1;
+
+    int mid = s + ((e - s)/2);
+    if      (array[mid] == v) return mid;
+    else if (array[mid] > v)  return binarySearch_(array, s, mid-1, v);
+    else                      return binarySearch_(array, mid+1, e, v);
+}
+int binarySearch (vector<int>& array, int v) {  // Iterative
+    // O(log N) time
+    int s = 0;
+    int e = array.size() - 1;
+
+    while (s <= e) {
+        int mid = s + ((e-s)/2);
+        if      (array[mid] == v) return mid;
+        else if (array[mid] >  v) { e = mid - 1; }
+        else                      { s = mid + 1; }
+    }
+    return -1;
+}
+
+/*============================Partition an Array around a value at position p=====================*/
+// Reorders array based on pivot, returns position such that all previous elements are <= pivot
+// and all folowing elements are > pivot
+
+int partition_ (vector<int>& array, int l, int r, int p) {
+    // O(N) time
+    int pivot = array[p];
+    array[p] = array[l]; array[l] = pivot; // swap array[p] and array[l]
+    int i = l; int j = r+1;
+
+    while (true) {
+        do { ++i; } while (i <= r && array[i] <= pivot);
+        do { --j; } while (array[j] > pivot);
+
+        if (i >=j ) break;
+        //else
+        int t = array[i]; array[i] = array[j]; array[j] = t; //swap
+    }
+
+    int t = array[l]; array[l] = array[j]; array[j] = t;
+    return j;
+}
+
+int partition(vector<int>& array, int l, int r) {
+    return partition_(array, l, r, l);
+}
+
+/* ====================== QuickSelect ( k'th Smallest Element) ===================================*/
+
+
 /* ========================Given Two Arrays, Find Element That Has been Deleted===================*/
-// http://www.geeksforgeeks.org/find-lost-element-from-a-duplicated-array/
 // http://www.geeksforgeeks.org/find-the-missing-number/
 
+// Arrays are not in same order
 int findMissing (vector<int>& array1, vector<int>& array2) {
-    // Arrays are not in same order
     // O(N) time
     int checksumA = 0;
     for (int i = 0; i < array1.size(); i++)
@@ -422,6 +478,27 @@ int findMissing (vector<int>& array1, vector<int>& array2) {
     return checksumB ^ checksumA;
 }
 
+/* ===============Given Two Arrays, Find Element That Has been Deleted (Same Order)===============*/
+// http://www.geeksforgeeks.org/find-lost-element-from-a-duplicated-array/
+
+// Arrays are in same order, not necessarily in sorted order!
+int findMissingSameOrder (vector<int>& array1, vector<int>& array2, int& pos) {
+    //  O(log N) time (like binary search)
+    if (array1.size() == 1)     { cout << "A"; pos = 0; return array1[0]; }
+    if (array1[0] != array2[0]) { cout << "B"; pos = 0; return array1[0]; }
+
+    int lo = 0; int hi = array1.size() - 1;
+    while (lo < hi) {
+        int mid = (lo + hi) / 2;  // Notice no (lo + hi + 1) / 2;
+
+        if (array1[mid] == array2[mid]) { lo = mid; }
+        else                            { hi = mid; }  //array1[mid] < array2[mid] !! ALWAYS
+
+        if (hi - 1 == lo) { pos = hi; break; }
+    }
+
+    return array1[pos];
+}
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void pairsDifferingK_example() {
@@ -516,10 +593,31 @@ void searchSortedMatrix_example() {
     cout << "Found element 29 in matrix position : (" << res.first << ", " << res.second << ")";
     cout << endl;
 }
+void binarySearch_example() {
+    vector<int> v = {1,3,6,233,123,125};
+    int res = binarySearch_(v, 0, v.size() - 1, 125);
+    cout << "Element 1225 is in position (binary search) : " << res << endl;
+    cout << "Element 6 is in position (binary search) : " << binarySearch(v, 6) << endl;
+}
+void partition_example() {
+    vector<int> v = {7, 5, 3, 12, 4, 26, 19};
+    int res = partition(v, 0, v.size() - 1);
+    cout << "Partitioning [7, 5, 3, 12, 4, 26, 19] returns: position " << res << " and array [ ";
+    for (auto& e : v) {
+        cout << e << ", ";
+    } cout << " ]" << endl;
+}
 void findMissing_example() {
     vector<int> v1 = {9,1,3,7,2,-2,-3};
     vector<int> v2 = {-2,7,-3,2,9,1};
     cout << "Missing element between two arrays is: " << findMissing(v1, v2) << endl;
+}
+void findMissingSameOrder_example() {
+    vector<int> v1 = {9,1,3,7,2,-2,-3};
+    vector<int> v2 = {9,1,3,7,2,-2};
+    int pos;
+    int res = findMissingSameOrder(v1,v2, pos);
+    cout << "Missing element between two arrays is: " << res << " at position " << pos << endl;
 }
 
 /* ===============================================================================================*/
@@ -537,7 +635,10 @@ int main () {
     mergeArrays_example();
     mergeInPlace_example();
     searchSortedMatrix_example();
+    binarySearch_example();
+    partition_example();
     findMissing_example();
+    findMissingSameOrder_example();
 }
 
 /* =======================================TODO====================================================*/
