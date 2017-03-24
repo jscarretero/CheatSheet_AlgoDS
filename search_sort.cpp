@@ -1,4 +1,5 @@
 #include <iostream>
+#include <assert.h>
 #include <vector>
 #include <unordered_map>
 #include <list>
@@ -460,6 +461,99 @@ int partition(vector<int>& array, int l, int r) {
 
 /* ====================== QuickSelect ( k'th Smallest Element) ===================================*/
 
+bool quickSelect (vector<int>& array, int l, int r, int k, int& result) {
+    // T(N) = T(N/2) + 1 --> O(N) linear in the average case (as long as pivot lies in the middle)
+    // Worst case is O(N^2), when array is sorted in inverse order and partition chooses l as pivot!
+    // Modifies array, as opposed to min/max heap approach, k is inside [0, array.size()-1]
+    if (l > r) return false;
+
+    int p = partition(array, l, r);
+    if      (p == k) { result = array[p]; return true;}
+    else if (p <  k) { return quickSelect(array, p+1, r, k, result); }
+    else             { return quickSelect(array, l, p-1, k, result); }
+}
+
+/* ===================================Quick Sort==================================================*/
+// http://www.geeksforgeeks.org/iterative-quick-sort/
+
+void quicksort (vector<int>& array, int l, int r) {
+    // T(N) = 2*T(N/2) + N --> O(N log N) average case
+    // O(N^2) worst case, when pivot is chosen as value in position l, and array is sorted inversely
+    // QuickSort is cache-friendly
+    // https://www.nayuki.io/page/master-theorem-solver-javascript
+
+        if (l >= r) return;
+    int pivot = partition(array, l, r);
+    quicksort(array, l, pivot - 1);
+    quicksort(array, pivot + 1, r);
+}
+
+/* =================================Median of Two SORTED Arrays===================================*/
+// http://www.geeksforgeeks.org/median-of-two-sorted-arrays/
+
+int median (int array[], int n) {
+    if (n % 2 == 0)  return (array[n/2] + array[n/2 - 1])/2;
+    else             return  array[n/2];
+}
+
+bool getMedian (int array1[], int array2[], int n, int& result) {
+    // Arrays have same size
+    // T(N) = T(N/2) + 1 --> O(logN) time
+
+    if (n <= 0) { return false; }
+    if (n == 1) { result = ( array1[0]+array2[0] ) / 2;
+                  return true; }
+    if (n == 2) { result = ( max(array1[0], array2[0])  + min(array1[1], array2[1]) ) / 2;
+                  return true; }
+
+    int m1 = median (array1, n);
+    int m2 = median (array2, n);
+
+    if (m1 == m2) { result = m1; return true; }
+    if (m1  < m2) {    /* If m1 < m2 then median must exist in array1[m1....] and array2[....m2] */
+        if (n % 2 == 0)    return getMedian(array1 + n/2 - 1, array2, n - n/2 + 1, result);
+        else               return getMedian(array1 + n/2    , array2, n - n/2    , result);
+    } else {           /* If m1 > m2 then median must exist in array1[....m1] and array2[m2...] */
+        if (n % 2 == 0)    return getMedian(array2 + n/2 - 1, array1, n - n/2 + 1, result);
+        else               return getMedian(array2 + n/2    , array1, n - n/2    , result);
+    }
+}
+
+bool getMedian_ (int array1[], int array2[], int n, int& result) {
+    // Arrays have same size. This is a modification of the merge algorithm of two sorted arrays.
+    // Idea is traverse both arrays in sorted order, and count traversed elements until they are n.
+    // O(N) time
+
+    if (n <= 0) return false;
+
+    int i  =  0; int j = 0;
+    int m1 = -1; int m2 = -1;  // stores last 2 visited (minimum) elements
+
+    /* Since there are 2n elements, median will be average of elements at index n-1 and n in the
+       array obtained after merging array1 and array2 */
+    for (int count = 0; count <= n; count++) {
+        if (i == n) {
+            /* All elements of array1[] are < than smallest(or first) element of array2[]  */
+            m1 = m2; m2 = array2[0];
+            break;
+        } else if (j == n) {
+            /* All elements of array2[] are < than smallest(or first) element of array1[] */
+            m1 = m2; m2 = array1[0];
+            break;
+        }
+
+        if (array1[i] < array2[j]) {
+            m1 = m2; m2 = array1[i];
+            i++;
+        } else {
+            m1 = m2; m2 = array2[j];
+            j++;
+        }
+    }
+
+    result =  (m1 + m2)/2;
+    return true;
+}
 
 /* ========================Given Two Arrays, Find Element That Has been Deleted===================*/
 // http://www.geeksforgeeks.org/find-the-missing-number/
@@ -607,6 +701,35 @@ void partition_example() {
         cout << e << ", ";
     } cout << " ]" << endl;
 }
+void quickselect_example() {
+    vector<int> v  = {12, 3, 5, 7, 4, 19, 26};
+    vector<int> v2 = {12, 3, 5, 7, 4, 19, 26};
+
+    int result; int k = 3;
+    bool found = quickSelect(v, 0, v.size() - 1, k, result);
+    cout << "K'th smallest element for k = 3 is : " << result << endl;
+             k = 1;
+         found = quickSelect(v2, 0, v2.size() - 1, v2.size() - 1 - k, result);
+    cout << "K'th biggest  element for k = 2 is : " << result << endl;
+}
+void quicksort_example() {
+    vector<int> v  = {12, 3, 5, 7, 4, 19, 26};
+    quicksort(v, 0, v.size()-1);
+    cout << "QuickSort sorted array is : [";
+    for (auto& e: v) {
+        cout << e << ", ";
+    } cout << "]" << endl;
+}
+void getMedian_example() {
+    int v1[] = {1, 2, 3, 6, 7};
+    int v2[] = {4, 6, 8, 10, 9};
+    int result, result2;
+    bool found = getMedian (v1, v2,  5, result);
+         found = getMedian_(v1, v2, 5, result2);
+    assert(result == result2);
+
+    cout << "Median of two sorted arrays is : " << result << endl;
+}
 void findMissing_example() {
     vector<int> v1 = {9,1,3,7,2,-2,-3};
     vector<int> v2 = {-2,7,-3,2,9,1};
@@ -637,6 +760,9 @@ int main () {
     searchSortedMatrix_example();
     binarySearch_example();
     partition_example();
+    quickselect_example();
+    quicksort_example();
+    getMedian_example();
     findMissing_example();
     findMissingSameOrder_example();
 }
