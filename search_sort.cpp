@@ -4,11 +4,10 @@
 #include <unordered_map>
 #include <list>
 #include <algorithm>
-using namespace std;
+#include <climits>
+using namespace std; //INT_MIN, INT_MAX
 
-// http://www.geeksforgeeks.org/segregate-0s-and-1s-in-an-array-by-traversing-array-once/
-// http://www.geeksforgeeks.org/sort-an-array-of-0s-1s-and-2s/
-// https://sites.google.com/site/spaceofjameschen/home/sort-and-search/dutch-national-flag
+#include "binary_heap.h" // includes min-heap and max-heap implementations
 
 /* =========================Helper declarations and functions ====================================*/
 
@@ -459,9 +458,52 @@ int partition(vector<int>& array, int l, int r) {
     return partition_(array, l, r, l);
 }
 
-/* ====================== QuickSelect ( k'th Smallest Element) ===================================*/
+/* ==============================0s to Left, 1s to Right==========================================*/
+// http://www.geeksforgeeks.org/segregate-0s-and-1s-in-an-array-by-traversing-array-once/
+// Solution 1: count 0s, count 1s in one pass, and in a second pass add them
+// Solution 2: single pass, O(N) time. Similar to partition method of quicksort
 
+void segregateO1 (vector<int>& array) {
+    // O(N) time, 1 pass
+    int left = 0; int right = array.size() - 1;
+
+    while (left < right) {
+        while ( (left < right) && (array[left] < array[right]) ) { left++; right--; }
+        if (left < right) {
+            array[left] = 0; array[right] = 1;
+            left++; right --;
+        }
+    }
+}
+
+/* ==========================0s First, then 1s then 2s (Dutch Flag)===============================*/
+// http://www.geeksforgeeks.org/sort-an-array-of-0s-1s-and-2s/
+// https://sites.google.com/site/spaceofjameschen/home/sort-and-search/dutch-national-flag
+
+void segregate012 (vector<int>& array) {
+    // O(N) time, 1 pass
+    int lo = 0;  int hi = array.size() - 1; int mid = 0;
+    // INVARIANT: [mid...hi] is unsorted, [0..lo) and (hi, N-1] are sorted
+    // But mid is lo (0) at the beginning.
+
+    while (mid <= hi) {
+        if (array[mid] == 0) {
+            int tmp = array[lo]; array[lo] = array[mid]; array[mid] = tmp;
+            lo++; mid++;
+        } else if (array[mid] == 1) {
+            mid++;
+        } else if (array[mid] == 2) {
+            int tmp = array[mid]; array[mid] = array[hi]; array[hi] = tmp;
+            hi--;
+        }
+    }
+}
+
+/* ====================== QuickSelect ( k'th Smallest Element) ===================================*/
+// http://www.geeksforgeeks.org/kth-smallestlargest-element-unsorted-array-set-2-expected-linear\
+//       -time/
 bool quickSelect (vector<int>& array, int l, int r, int k, int& result) {
+
     // T(N) = T(N/2) + 1 --> O(N) linear in the average case (as long as pivot lies in the middle)
     // Worst case is O(N^2), when array is sorted in inverse order and partition chooses l as pivot!
     // Modifies array, as opposed to min/max heap approach, k is inside [0, array.size()-1]
@@ -482,7 +524,7 @@ void quicksort (vector<int>& array, int l, int r) {
     // QuickSort is cache-friendly
     // https://www.nayuki.io/page/master-theorem-solver-javascript
 
-        if (l >= r) return;
+    if (l >= r) return;
     int pivot = partition(array, l, r);
     quicksort(array, l, pivot - 1);
     quicksort(array, pivot + 1, r);
@@ -594,6 +636,131 @@ int findMissingSameOrder (vector<int>& array1, vector<int>& array2, int& pos) {
     return array1[pos];
 }
 
+/* ==============================Max Heap and Min Heap (Binomial Heaps) ==========================*/
+// https://en.wikipedia.org/wiki/Binary_heap
+// http://www.geeksforgeeks.org/why-is-binary-heap-preferred-over-bst-for-priority-queue/
+// http://geeksquiz.com/binary-heap/
+// http://www.geeksforgeeks.org/g-fact-85/
+// http://www.geeksforgeeks.org/applications-of-heap-data-structure/
+
+        // http://quiz.geeksforgeeks.org/heap-sort/
+        // http://www.geeksforgeeks.org/merge-k-sorted-arrays/
+        // http://www.geeksforgeeks.org/nearly-sorted-algorithm/
+
+/*
+    Supports operations:
+        - get TOP priority element:    O(1)
+        - insert element:              O(log N)
+        - remove TOP priority element: O(log N)
+        - decrease/increase key:       O(log N)
+
+    - Since Binary Heap is implemented using arrays,there is always better locality of reference and
+      operations are more cache friendly than balanced BST.
+    - Although operations are of same time complexity, constants in Binary Search Tree are higher.
+    - We can build a Binary Heap in O)n= time. Self Balancing BSTs require O)nLogn= time to
+      construct.
+    - Binary Heap doesn’t require extra space for pointers.
+    - There are variations of Binary Heap like Fibonacci Heap that can support insert and
+      decrease-key in Θ(1) time
+    - Used for order statistics, and Prim and Dijkstra's Graphs Algorithms
+
+    BUT:
+    - Searching an element in self-balancing BST is O(Logn) which is O(n) in Binary Heap
+    - We can print all elements of BST in sorted order in O(n) time, but Binary Heap requires
+      O(nLogn) time
+    - Floor and ceil can be found in O(Logn) time in balanced BST.
+    - K’th largest/smallest element be found in O(Logn) time by augmenting tree with an additional
+      fields: http://www.geeksforgeeks.org/find-k-th-smallest-element-in-bst-order-statistics-in-bst
+*/
+
+// Min and Max Heaps Using STL Libraries:
+//    http://stackoverflow.com/questions/2786398/is-there-an-easy-way-to-make-a-min-heap-in-c
+//    https://codeconnect.wordpress.com/2013/09/05/max-min-heap-using-c-stl/
+//    http://stackoverflow.com/questions/7681779/easy-way-to-maintain-a-min-heap-with-stl
+
+
+/* ====================== k'th Smaller Element Using Heaps =======================================*/
+// http://www.geeksforgeeks.org/k-largestor-smallest-elements-in-an-array/
+// http://www.geeksforgeeks.org/kth-smallestlargest-element-unsorted-array/
+// http://www.geeksforgeeks.org/kth-smallestlargest-element-unsorted-array-set-2-expected
+//        -linear-time/
+// http://www.geeksforgeeks.org/kth-smallestlargest-element-unsorted-array-set-3-worst-case\
+//        -linear-time/
+
+int kThSmallest (int array[], int n, int k) {
+    // O(K + (N-K)logK) time (worst case) .  Note that QuickSelect has worst case time c. of O(N^2)
+    // O(K) space
+
+    MaxHeap mh(array, k); // Builds a max heap of first k elements: O(K) time
+    // Idea: the root holds the k-th smallest element. If we find a new element that is smaller than
+    //       the root, then the root is no longer the k-th smallest element, therefore we replace it
+
+    for (int i = k; i < n; i++) {
+        if ( array[i] < mh.getMax() )  mh.replaceMax(array[i]);
+    }
+    return mh.getMax();
+}
+
+int kThSmallest_ (int array[], int n, int k) {
+    // O(N + KlogN) time, O(N) space
+    MinHeap mh (array, n); // Attention, whole array turned into min heap (O(N) time)
+
+    for (int i = 0; i < k - 1; i++) {
+        mh.extractMin();
+    }
+    return mh.getMin();
+}
+
+/* =============================Sort a Nearly sorted (k-Sorted) Array ============================*/
+// http://www.geeksforgeeks.org/nearly-sorted-algorithm/
+// Each element is at most k away from its target position
+//
+
+void sortNearlySorted (vector<int>& array, int k) {
+    // O(K + (N-K)logK) time,  O(K) space
+    // IDEA: Create min-heap of k+1 elements (O(k+1)). Obtain minimum element and insert into array,
+    //       add new element into  heap and repeat
+
+    assert (k < array.size());
+
+    int* newarray = new int[k+1];
+    for (int i = 0; i < k+1; i++) newarray[i] = array[i];
+
+    MinHeap mh (newarray, k+1);
+    int np = 0;
+    for (int i = k+1; i < array.size(); i++) {
+        int val = mh.extractMin();
+        array[np++] = val;
+        mh.insertKey(array[i]);
+    }
+
+    for (int i = 0; i < k+1; i++)
+        array[np++] = mh.extractMin();
+
+    delete newarray;
+}
+
+void insertionSort (vector<int>& array) {
+    // O(N*k) time, O(1) space
+   int i, key, j;
+   for (i = 1; i < array.size(); i++) {
+       key = array[i];
+       j = i-1;
+
+       /* Move elements of A[0..i-1], that are greater than key, to one position ahead of their
+          current position. IMPORTANT: This loop will run at most k times !! */
+       while (j >= 0 && array[j] > key) {
+           array[j+1] = array[j];
+           j = j-1;
+       }
+       array[j+1] = key;
+   }
+}
+void sortNearlySorted_ (vector<int>& array, int k) {
+    insertionSort(array);
+    k++; // so that compiler does not warn
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void pairsDifferingK_example() {
     vector<int> v = {1,2,3,5,6,7,9,11,12,13};
@@ -701,6 +868,22 @@ void partition_example() {
         cout << e << ", ";
     } cout << " ]" << endl;
 }
+void segregateO1_example() {
+    vector<int> v = {1,0,1,1,0,0,1};
+    segregateO1(v);
+    cout << "Seggregating 0s and 1s for [1,0,1,1,0,0,1] is : [";
+    for (auto& e : v) {
+        cout << e << ", ";
+    } cout << "]" << endl;
+}
+void segregate012_example() {
+    vector<int> v = {0,2,2,1,0,0,1};
+    segregate012(v);
+    cout << "Seggregating 0s and 1s and 2s for [0,2,2,1,0,0,1] is : [";
+    for (auto& e : v) {
+        cout << e << ", ";
+    } cout << "]" << endl;
+}
 void quickselect_example() {
     vector<int> v  = {12, 3, 5, 7, 4, 19, 26};
     vector<int> v2 = {12, 3, 5, 7, 4, 19, 26};
@@ -742,6 +925,20 @@ void findMissingSameOrder_example() {
     int res = findMissingSameOrder(v1,v2, pos);
     cout << "Missing element between two arrays is: " << res << " at position " << pos << endl;
 }
+void kThSmallest_example() {
+    int v1[] = {12, 3, 5, 7, 19};
+    int v2[] = {12, 3, 5, 7, 19};
+    cout << "K'th smallest element in array (using max heap) is: " << kThSmallest(v1, 5, 4) << endl;
+    cout << "K'th smallest element in array (using max heap) is: " << kThSmallest(v2, 5, 4) << endl;
+}
+void sortNearlySorted_example() {
+    vector<int> v = {2, 6, 3, 56, 8, 12};
+    sortNearlySorted(v, 3);
+    cout << "Sorting nearly sorted array (k=3) is : [";
+    for (auto& e : v) {
+        cout << e << ", ";
+    }   cout << "]" << endl;
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -760,11 +957,15 @@ int main () {
     searchSortedMatrix_example();
     binarySearch_example();
     partition_example();
+    segregateO1_example();
+    segregate012_example();
     quickselect_example();
     quicksort_example();
     getMedian_example();
     findMissing_example();
     findMissingSameOrder_example();
+    kThSmallest_example();
+    sortNearlySorted_example();
 }
 
 /* =======================================TODO====================================================*/
