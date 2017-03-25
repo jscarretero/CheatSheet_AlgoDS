@@ -21,7 +21,7 @@ Study and check the source code of the files using this suggested order:
 4. `stacks.cpp` 
 5. `trees.cpp` 
 6. `lists.cpp` 
-7. `search_sort.cpp` (WIP) 
+7. `search_sort.cpp` -*includes binary heaps*- (WIP) 
 8. `graphs.cpp` (WIP) 
 9. `backtrack.cpp` (WIP) 
 10. `dynamicprogramming.cpp` (WIP) 
