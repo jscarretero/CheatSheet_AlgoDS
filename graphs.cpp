@@ -228,6 +228,55 @@ bool pathAmong (Graph&g, int s, int d, list<int>& result) {
     return pathAmong_util(g, s, d, visited, result);
 }
 
+/* =====================================Is Cyclic a Directed Graph?===============================*/
+// http://www.geeksforgeeks.org/detect-cycle-in-a-graph/
+// http://www.geeksforgeeks.org/detect-cycle-undirected-graph/
+// http://stackoverflow.com/questions/2869647/why-dfs-and-not-bfs-for-finding-cycle-in-graphs
+
+// IDEA:
+// DFS over BFS because: (i) easier to implement, (ii) Once DFS finds a cycle, the stack contain the
+// nodes forming the cycle. The same is not true for BFS.
+/*
+bool isCyclic_util (Graph& g, int s, vector<bool>& visited, vector<bool>& inProcess) {
+    if (!visited[s]) {
+        visited[s]   = true;
+        inProcess[s] = true;
+        for (auto& a : g.adjacent(s)) {
+            if (inProcess[a]) return true;
+            if (!visited[i]) {
+                bool is = isCyclic_util(g, a, visited, inProcess);
+                if (is) return true;
+            }
+        }
+    }
+    inProcess[s] = false;
+    return false;
+}
+*/
+bool isCyclic_util (Graph& g, int s, vector<bool>& visited, vector<bool>& inProcess) {
+    visited[s]   = true;
+    inProcess[s] = true;
+    for (auto& a : g.adjacent(s)) {
+        if (inProcess[a]) return true;
+        if (!visited[a]) {
+            bool is = isCyclic_util(g, a, visited, inProcess);
+            if (is) return true;
+        }
+    }
+    inProcess[s] = false;
+    return false;
+}
+
+bool isCyclic (Graph& g, vector<bool>& cycle) {
+    vector<bool> visited (g.numVertices(), false);
+
+    bool found = false;
+    for (int i = 0; i < g.numVertices(); i++) {
+        if (isCyclic_util(g, i, visited, cycle)) found = true;
+    }
+    return found;
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void BFS_example() {
     Graph g(5);
@@ -313,6 +362,24 @@ void isPath_example() {
         cout << e << ", ";
     }   cout << endl;
 }
+void isCyclic_example() {
+    Graph g(8);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 2);
+    g.addEdge(2, 3);
+    //g.addEdge(3, 0);
+    g.addEdge(4, 5);
+    g.addEdge(5, 6);
+    g.addEdge(6, 7);
+    g.addEdge(7, 4);
+
+    vector<bool> incycle(g.numVertices(), false);
+    cout << "Graph is cyclic ? : " << isCyclic(g, incycle) << " with vertices : ";
+    for (int i = 0; i < g.numVertices(); i++) {
+        if (incycle[i]) cout << i << ", ";
+    }   cout << endl;
+}
 /* ===============================================================================================*/
 int main() {
     BFS_example();
@@ -320,6 +387,7 @@ int main() {
     TopologicalSort_example();
     isBipartite_example();
     isPath_example();
+    isCyclic_example();
 }
 
 /* =======================================TODO====================================================*/
