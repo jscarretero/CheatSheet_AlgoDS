@@ -398,6 +398,19 @@ void mergeInPlace(int* ar1, int* ar2, int m, int n)
     }
 }
 
+/* ===========================Sort Huge File with One String Per Line=============================*/
+// From 'Cracking the Coding Interview'
+
+// SOLUTION:
+//  - We don't want to bring the whole file into memory. Therefore use external sort.
+//  - We can use a modified merge sort: we divide the huge file in diffent chunks that can be read
+//    into memory. Each chunk has x MB, where x is the amount of available memory.
+//  - We start with two chunks, and use the merge algorithm to sort them. We can traverse the chunks
+//    from the end, decreasing the chunk sizes as we merge them. This avoids increasing the extra
+//    space needed in the FS.
+//  - Then, we keep merging new chunks.
+
+
 /* ==========================Search in a row-wise and column-wise sorted matrix===================*/
 // http://www.geeksforgeeks.org/search-in-row-wise-and-column-wise-sorted-matrix/
 
@@ -762,10 +775,6 @@ int findMissingSameOrder (vector<int>& array1, vector<int>& array2, int& pos) {
 // http://geeksquiz.com/binary-heap/
 // http://www.geeksforgeeks.org/g-fact-85/
 // http://www.geeksforgeeks.org/applications-of-heap-data-structure/
-
-        // http://quiz.geeksforgeeks.org/heap-sort/
-        // http://www.geeksforgeeks.org/merge-k-sorted-arrays/
-        // http://www.geeksforgeeks.org/nearly-sorted-algorithm/
 
 /*
     Supports operations:
@@ -1145,6 +1154,9 @@ int main () {
 }
 
 /* =======================================TODO====================================================*/
+// http://quiz.geeksforgeeks.org/heap-sort/
+// http://www.geeksforgeeks.org/merge-k-sorted-arrays/
+
 // SEARCH AND SORTING: http://www.geeksforgeeks.org/fundamentals-of-algorithms/#SearchingandSorting
 // NICE link: http://www.nayuki.io/page/master-theorem-solver-javascript
 //            http://www.cs.unipr.it/purrs/
