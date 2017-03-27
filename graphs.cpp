@@ -17,10 +17,8 @@ class Graph {
         void addEdge(int s, int d);
         const set<int>& adjacent(int s);
         int numVertices();
-
-//        bool isReachable(int s, int d);
-//        bool isCyclic(int s, vector<bool>& visited, vector<bool>& inProcess);
 };
+
 Graph::Graph (unsigned int numV) {
     this->numV = numV;
     adj = new set<int>[numV];
@@ -38,7 +36,6 @@ const set<int>& Graph::adjacent (int s) {
 int Graph::numVertices() {
     return numV;
 }
-
 void process (int v) {
     cout << v << ", ";
 }
@@ -115,7 +112,7 @@ void DFS (Graph& g, int s, bool all=false) {
 
 // REMEMBER: ACYCLIC AND DIRECTED Graph. Otherwise topological sorting makes NO sense
 // Linear ordering of vertices such that for every directed edge uv, vertex u comes before v in the
-// ordering
+// ordering.
 // It is a modification of DFS, node is processed after visiting recursively all adjacent vertices
 void TopologicalSort_Util (Graph& g, int s, vector<bool>& visited, stack<int>& result) {
     // TIME: O(V + E), space O(V)
@@ -142,6 +139,71 @@ void TopologicalSort (Graph& g) {
     for (stack<int> dump = result; !dump.empty(); dump.pop()) {
         process(dump.top());
     }
+}
+
+/* ============================Bipartite Undirected Acyclic Graph?================================*/
+// http://www.geeksforgeeks.org/bipartite-graph/
+
+// IDEA: Modification of BFS, equivalent to 2-coloring
+bool isBipartite_Util (Graph& g, int s, vector<bool>& visited, vector<int>& colors) {
+    // O (V + E) time, O(V) space
+
+    list<int> toVisit;
+
+    visited[s] = true;
+    colors[s]  = 0;
+    toVisit.push_back(s);
+
+    while (!toVisit.empty()) {
+        int v = toVisit.front(); toVisit.pop_front();
+        for (auto& a : g.adjacent(v)) {
+            if (!visited[a]) {
+                visited[a] = true;
+                colors[a] = 1 - colors[v];
+                toVisit.push_back(a);
+            } else if (a != v) {
+                if (colors[a] == colors[v]) return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool isBipartite (Graph& g) {
+    vector<bool> visited (g.numVertices(), false);
+    vector<int> colors(g.numVertices(), -1);
+
+    for (int i = 0; i < g.numVertices(); i++) {
+        if (!visited[i]) {
+            if (!isBipartite_Util(g, i, visited, colors)) return false;
+        }
+    }
+    return true;
+}
+
+/* =============================Node Reachability in Directed Graph===============================*/
+//http://www.geeksforgeeks.org/find-if-there-is-a-path-between-two-vertices-in-a-given-graph/
+
+bool isPath (Graph& g, int s, int d) {
+    // O (V + E) time, O(V) space, similar to BFS
+    vector<bool> visited (g.numVertices(), false);
+    list<int> toVisit;
+
+    if (s == d) return true;
+
+    visited[s] = true;
+    toVisit.push_back(s);
+    while (!toVisit.empty()) {
+        int v = toVisit.front(); toVisit.pop_front();
+        for (auto& a : g.adjacent(v)) {
+            if (a == d) return true;
+            if (!visited[a]) {
+                visited[a] = true;
+                toVisit.push_back(a);
+            }
+        }
+    }
+    return false;
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -182,11 +244,43 @@ void TopologicalSort_example() {
     cout << "Topological Sort is: "; TopologicalSort(g);
     cout << endl;
 }
+void isBipartite_example() {
+    Graph g(4);
+    /*
+    int G[4][4] = {{0, 1, 0, 1},
+                   {1, 0, 1, 0},
+                   {0, 1, 0, 1},
+                   {1, 0, 1, 0}
+                  };
+    */
+    g.addEdge(0,1);
+    g.addEdge(0,3);
+    g.addEdge(1,0);
+    g.addEdge(3,0);
+    g.addEdge(1,2);
+    g.addEdge(2,1);
+    g.addEdge(2,3);
+    g.addEdge(3,2);
+    cout << "Graph is bipartite? is: " << isBipartite(g) << endl;
+}
+void isPath_example() {
+    Graph g(4);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 2);
+    g.addEdge(2, 0);
+    g.addEdge(2, 3);
+    g.addEdge(3, 3);
+    cout << "Node 3 is reachable from 1 is: " << isPath(g, 1, 3) << endl;
+    cout << "Node 1 is reachable from 3 is: " << isPath(g, 3, 1) << endl;
+}
 /* ===============================================================================================*/
 int main() {
     BFS_example();
     DFS_example();
     TopologicalSort_example();
+    isBipartite_example();
+    isPath_example();
 }
 
 /* =======================================TODO====================================================*/
