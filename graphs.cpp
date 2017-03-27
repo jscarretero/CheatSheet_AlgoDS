@@ -184,26 +184,48 @@ bool isBipartite (Graph& g) {
 /* =============================Node Reachability in Directed Graph===============================*/
 //http://www.geeksforgeeks.org/find-if-there-is-a-path-between-two-vertices-in-a-given-graph/
 
-bool isPath (Graph& g, int s, int d) {
+bool isPath (Graph& g, int s, int d, vector<int>& discoverer) {
     // O (V + E) time, O(V) space, similar to BFS
     vector<bool> visited (g.numVertices(), false);
     list<int> toVisit;
 
-    if (s == d) return true;
-
     visited[s] = true;
     toVisit.push_back(s);
+
     while (!toVisit.empty()) {
         int v = toVisit.front(); toVisit.pop_front();
+        if (v == d) return true;
         for (auto& a : g.adjacent(v)) {
-            if (a == d) return true;
             if (!visited[a]) {
+                discoverer[a] = v;
                 visited[a] = true;
                 toVisit.push_back(a);
             }
         }
     }
     return false;
+}
+
+bool pathAmong_util (Graph& g, int s, int d, vector<bool>& visited, list<int>& res) {
+    // O (V + E) time, O(V) space, similar to DFS
+    visited[s] = true;
+    res.push_back(s);
+
+    if (s == d) return true;
+
+    for ( auto& a: g.adjacent(s) ) {
+        if (!visited[a]) {
+            bool found = pathAmong_util(g, a, d, visited, res);
+            if (found) return true;
+        }
+    }
+    res.pop_back();
+    return false;
+}
+
+bool pathAmong (Graph&g, int s, int d, list<int>& result) {
+    vector<bool> visited (g.numVertices(), false);
+    return pathAmong_util(g, s, d, visited, result);
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -264,15 +286,32 @@ void isBipartite_example() {
     cout << "Graph is bipartite? is: " << isBipartite(g) << endl;
 }
 void isPath_example() {
-    Graph g(4);
+    Graph g(5);
     g.addEdge(0, 1);
     g.addEdge(0, 2);
-    g.addEdge(1, 2);
+    g.addEdge(1, 4);
     g.addEdge(2, 0);
     g.addEdge(2, 3);
     g.addEdge(3, 3);
-    cout << "Node 3 is reachable from 1 is: " << isPath(g, 1, 3) << endl;
-    cout << "Node 1 is reachable from 3 is: " << isPath(g, 3, 1) << endl;
+    g.addEdge(4, 2);
+
+    vector<int> result(g.numVertices(), -1);
+    stack<int>  inverse;
+    cout << "Is node 3 is reachable from 0 ?: " << isPath(g, 0, 3, result) << " with path : ";
+
+    int i = 3;
+    while (result[i] != -1) { inverse.push(i); i = result[i]; }   inverse.push(0);
+    for (stack<int> dump = inverse; !dump.empty(); dump.pop()) cout << dump.top() << ", ";
+    cout << " (BFS version) "<< endl;
+
+    cout << "Node 1 is reachable from 3 is: " << isPath(g, 3, 1, result) << endl;
+
+    list<int> path;
+    bool found= pathAmong(g, 0, 3, path); // Note it does not produce minimum path !
+    cout << "Path between 0 and 3 is (DFS-version): ";
+    for (auto& e: path) {
+        cout << e << ", ";
+    }   cout << endl;
 }
 /* ===============================================================================================*/
 int main() {
