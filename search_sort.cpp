@@ -1,6 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include <vector>
+#include <string>
 #include <unordered_map>
 #include <list>
 #include <algorithm>
@@ -10,6 +11,32 @@ using namespace std; //INT_MIN, INT_MAX
 #include "binary_heap.h" // includes min-heap and max-heap implementations
 
 /* =========================Helper declarations and functions ====================================*/
+
+/* =======================Sort Array of Strings with Anagrams Next To Each Other==================*/
+// From 'Cracking the Coding Interview'
+void sortAnagrams (vector<string>& array)
+{
+    // O(N) time, O(N) space
+    unordered_map<string, list<string> > anagrams;
+
+    for (auto& e : array) {
+        string key = e;
+        sort(key.begin(), key.end());
+
+        if (anagrams.find(key) == anagrams.end()) {
+            anagrams[key] = list<string>();
+        }
+        anagrams[key].push_back(e);
+    }
+
+    int i = 0;
+    for (auto& a : anagrams) {
+        list<string>& lst = a.second;
+        for (auto& e : lst) {
+            array[i++] = e;
+        }
+    }
+}
 
 /* ======================All pairs differing by K in a sorted vector==============================*/
 // http://www.careercup.com/question?id=5727804001878016
@@ -320,21 +347,6 @@ int bigestSubarraySummingZero_ (vector<int>& array, int& s, int& e) {
     }
 }
 
-/* =========================Find a Fixed Point in a given array===================================*/
-// http://www.geeksforgeeks.org/find-a-fixed-point-in-a-given-array/
-// Assume SORTED & UNIQUE elements!
-
-int fixedPoint (vector<int>& array, int s, int e) {
-    // O(N log N), divide & conquer, based on binary search T(N) = T(N/2) + 1
-    if (s > e) return -1;
-
-    int h = s + (e - s + 1) / 2 ; // (2s + e -s + 1)/2 == (s + e +1 )/2
-
-    if      (array[h] == h)       return h;
-    else if (array[h] >  h)       return fixedPoint(array, s, h-1);
-    else                          return fixedPoint(array, h+1, e);
-}
-
 /* =================Given 2 sorted arrays A & B, merge them into B (enough space provided)========*/
 void mergeArrays (int a[], int b[], int sizeA, int sizeB) {
     // TIP: start from end
@@ -482,6 +494,8 @@ void segregateO1 (vector<int>& array) {
 
 void segregate012 (vector<int>& array) {
     // O(N) time, 1 pass
+    // IDEA:  partition modification
+
     int lo = 0;  int hi = array.size() - 1; int mid = 0;
     // INVARIANT: [mid...hi] is unsorted, [0..lo) and (hi, N-1] are sorted
     // But mid is lo (0) at the beginning.
@@ -596,6 +610,112 @@ bool getMedian_ (int array1[], int array2[], int n, int& result) {
     result =  (m1 + m2)/2;
     return true;
 }
+
+/* ==============================Find rotation count in sorted rotated array =====================*/
+// http://www.geeksforgeeks.org/find-rotation-count-rotated-sorted-array/
+
+// ASSUMPTION: UNIQUE numbers
+
+int rotationCount (vector<int>& array, int l, int r) { // ONLY for anti-clockwise rotations
+    // O(log N) time
+
+    // IDEA: Find index of minimum element, but using Binary Search
+    // The minimum element is the only element whose previous is greater than it. If there is
+    // no previous element element, then there is no rotation (first element is minimum). We check
+    // this condition for middle element by comparing it with (mid-1)’th and (mid+1)’th elements.
+    // If minimum element is not at middle (neither mid nor mid + 1), then minimum element lies in
+    // either left half or right half. If middle element is smaller than last element, then the
+    // minimum element lies in left half. Else minimum element lies in right half.
+
+    if (r < l)  return 0; // Condition to handle the case when array is not rotated
+    if (r == l) return r;
+
+    int mid = l + (r - l) / 2;
+    if (mid < r && array[mid]> array[mid+1]) return mid+1; // Check if mid+1 is minimum element.
+    if (mid > l && array[mid]< array[mid-1]) return mid;   // Check if mid itself is minimum element
+
+    // Decide whether we need to go to left half or right half
+    if (array[r] > array[mid]) return rotationCount(array, l, mid - 1);
+    else                       return rotationCount(array, mid + 1, r);
+
+}
+
+int rotationCount_ (vector<int>& array) {
+    // O(N) time
+
+    // First check for left-order rotation count
+    int l = 0;
+    for (l = 1; l < array.size(); l++) {
+        if (array[l] < array[l-1]) break;
+    }
+
+    // Also check for right-order rotation count
+    int r = 0;
+    for (r = array.size() - 2; r >= 0; r--) {
+        if (array[r] > array[r-1]) { r = array.size() - 1 - r; break;}
+    }
+
+    // Return minimum rotation
+    return min(l, r);
+}
+
+/* ===========================Find minimum in sorted rotated array==============================*/
+// http://www.geeksforgeeks.org/find-minimum-element-in-a-sorted-and-rotated-array/
+// EQUAL TO PREVIOUS CODE
+// ASSUMPTION: UNIQUE numbers
+
+int minimumInRotated (vector<int>& array, int l, int r) {
+    // O(log N) time
+
+    if (r < l)  return array[0]; // Condition to handle the case when array is not rotated
+    if (r == l) return array[r];
+
+    int mid = l + (r - l) / 2;
+    if (mid < r && array[mid] > array[mid+1]) return array[mid+1]; // Check for minimum element
+    if (mid > l && array[mid] < array[mid-1]) return array[mid];   // Check for minimum element
+
+    if (array[r] > array[mid]) return minimumInRotated(array, l, mid - 1);
+    else                       return minimumInRotated(array, mid + 1, r);
+}
+
+/* ============================Find in a sorted and rotated array=================================*/
+// http://www.geeksforgeeks.org/search-an-element-in-a-sorted-and-pivoted-array/
+// From 'Cracking the Coding Interview'
+// ASSUMPTION: UNIQUE numbers
+
+int searchRotated (vector<int>& array, int l, int r, int k) {
+    // O(log N)
+    if (r < l) return -1;
+
+    int mid = l + (r - l)/2;
+    if (array[mid] == k) return mid;
+
+    // Check which subarray [l...mid] or [mid+1...h] is sorted (both can be), check which subarray
+    // k belongs to
+    if (array[mid] >= array[l]) { // [l..mid] is sorted
+        if (k < array[mid] && k >= array[l])     return searchRotated(array, l, mid-1, k);
+        else                                     return searchRotated(array, mid+1, r, k);
+    }
+    // (else) :array[mid] <= array[r] HOLDS true
+    if (k <= array[r] && k > array[mid])         return searchRotated(array, mid + 1, r, k);
+    else                                         return searchRotated(array, l, mid - 1, k);
+}
+
+/* =========================Find a Fixed Point in a given array===================================*/
+// http://www.geeksforgeeks.org/find-a-fixed-point-in-a-given-array/
+// Assume SORTED & UNIQUE elements!
+
+int fixedPoint (vector<int>& array, int s, int e) {
+    // O(N log N), divide & conquer, based on binary search T(N) = T(N/2) + 1
+    if (s > e) return -1;
+
+    int h = s + (e - s + 1) / 2 ; // (2s + e -s + 1)/2 == (s + e +1 )/2
+
+    if      (array[h] == h)       return h;
+    else if (array[h] >  h)       return fixedPoint(array, s, h-1);
+    else                          return fixedPoint(array, h+1, e);
+}
+
 
 /* ========================Given Two Arrays, Find Element That Has been Deleted===================*/
 // http://www.geeksforgeeks.org/find-the-missing-number/
@@ -761,7 +881,43 @@ void sortNearlySorted_ (vector<int>& array, int k) {
     k++; // so that compiler does not warn
 }
 
+/* ===========================Median in Stream of Numbers=========================================*/
+// http://www.geeksforgeeks.org/median-of-stream-of-integers-running-integers/
+// http://stackoverflow.com/questions/10657503/find-running-median-from-a-stream-of-integers
+// http://karmaandcoding.blogspot.com.es/2012/03/stream-median-in-stream-of-numbers.html
+//
+// OBJECTIVE: For each element in stream, return median
+// Not using Quickselect on N/2 (but can store the data)
+
+// SOLUTION:
+//   Use Min and Max heap, max heap to the left storing elements smaller than median, min heap to
+//   the right, storing elements bigger than the median.
+//   The max heap allows inspecting biggest element that is smaller or equal to the median
+//   The min heap allows inpsecting smallest element that is bigger or equal to the median
+//   The process has to ensure both heaps have same size.
+// PSEUDOCODE:
+//   Obtain an element:
+//    -If it smaller than the root of the max heap, insert it.
+//      - If it is unbalanced, move root from max-heap to min heap
+//    - If it is bigger than the root of the max, insert to min-heap.
+//      - If min-heap is unbalanced, move root from min-heap to max heap
+//    At the end, if both heaps have same #elements, median is average of root elements
+//    If max heap has one more element, median is the root of the max heap
+//    If min heap has one more element, median is the root of the min heap
+//  O(N * logN) time complexity, O(N) space
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
+void sortAnagrams_example() {
+    vector<string> v;
+    v.push_back("javi"); v.push_back("is"); v.push_back("ugly"); v.push_back("ulgu");
+    v.push_back("ie");   v.push_back("ivaj");
+    sortAnagrams(v);
+
+    cout << "Sorting anagrams in array results in : [";
+    for (auto& e: v) {
+        cout << e << ", ";
+    } cout << "]" << endl;
+}
 void pairsDifferingK_example() {
     vector<int> v = {1,2,3,5,6,7,9,11,12,13};
     cout << "All pairs differing 3 in array are: "; pairsDifferingK(v, 3); cout << endl;
@@ -816,11 +972,6 @@ void bigestSubarraySummingZero_example() {
     int s, e;
     bigestSubarraySummingZero (v, s, e);
     cout << "Biggest subarray with sum 0 is between : " << s << " and " << e << endl;
-}
-void fixedPoint_example() {
-    vector<int> v= {-10, -1, 0, 3, 10, 11, 30, 50, 100};
-    int res = fixedPoint(v, 0, v.size() - 1);
-    cout << "Fixed point for array is : " << res << endl;
 }
 void mergeArrays_example() {
     int a[] = {3,4,5,22,40};
@@ -913,6 +1064,27 @@ void getMedian_example() {
 
     cout << "Median of two sorted arrays is : " << result << endl;
 }
+void rotationCount_example() {
+    vector<int> v1 = {10,15,20,0,5};
+    vector<int> v2 = {50,5,20,30,40};
+    int res = rotationCount(v1,0,4);
+        res = min(int(v1.size() - res), res);
+    cout << "Rotation count for v1 is: " << res << endl;
+    cout << "Rotation count for v2 is: " << rotationCount_(v2) << endl;
+}
+void minimumInRotated_example() {
+    vector<int> v = {10,15,20,0,5};
+    cout << "Minimum element in rotated array is: " << minimumInRotated(v,0,4) << endl;
+}
+void searchRotated_example() {
+    vector<int> v = {4, 5, 6, 7, 8, 9, 1, 2, 3};
+    cout << "Element 9 is at position in rotated array : " << searchRotated(v, 0, 8, 9) << endl;
+}
+void fixedPoint_example() {
+    vector<int> v= {-10, -1, 0, 3, 10, 11, 30, 50, 100};
+    int res = fixedPoint(v, 0, v.size() - 1);
+    cout << "Fixed point for array is : " << res << endl;
+}
 void findMissing_example() {
     vector<int> v1 = {9,1,3,7,2,-2,-3};
     vector<int> v2 = {-2,7,-3,2,9,1};
@@ -942,6 +1114,7 @@ void sortNearlySorted_example() {
 
 /* ===============================================================================================*/
 int main () {
+    sortAnagrams_example();
     pairsDifferingK_example();
     pairsSummingK_example();
     symmetricPairs_example();
@@ -951,7 +1124,6 @@ int main () {
     findSubarrayGivenSum_Positive_example();
     findSubarrayGivenSum_example();
     bigestSubarraySummingZero_example();
-    fixedPoint_example();
     mergeArrays_example();
     mergeInPlace_example();
     searchSortedMatrix_example();
@@ -962,6 +1134,10 @@ int main () {
     quickselect_example();
     quicksort_example();
     getMedian_example();
+    rotationCount_example();
+    minimumInRotated_example();
+    searchRotated_example();
+    fixedPoint_example();
     findMissing_example();
     findMissingSameOrder_example();
     kThSmallest_example();
