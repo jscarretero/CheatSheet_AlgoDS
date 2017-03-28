@@ -4,6 +4,7 @@
 #include <list>
 #include <stack>
 #include <algorithm>
+#include <climits>    //INT_MIN, INT_MAX
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -184,7 +185,11 @@ bool isBipartite (Graph& g) {
 /* =============================Node Reachability in Directed Graph===============================*/
 //http://www.geeksforgeeks.org/find-if-there-is-a-path-between-two-vertices-in-a-given-graph/
 
+// With Breadth First, we always reach a vertex from given source using minimum number of edges !
+// Not with DFS
+
 bool isPath (Graph& g, int s, int d, vector<int>& discoverer) {
+    // BFS-version
     // O (V + E) time, O(V) space, similar to BFS
     vector<bool> visited (g.numVertices(), false);
     list<int> toVisit;
@@ -207,6 +212,7 @@ bool isPath (Graph& g, int s, int d, vector<int>& discoverer) {
 }
 
 bool pathAmong_util (Graph& g, int s, int d, vector<bool>& visited, list<int>& res) {
+    // DFS version
     // O (V + E) time, O(V) space, similar to DFS
     visited[s] = true;
     res.push_back(s);
@@ -314,6 +320,117 @@ int numConnectedComponents (Graph& g, vector<set<int> >& result) {
         }
     }
     return result.size();
+}
+
+#define VRT 9
+
+/* ==================PRIM ALGORITHM (Minimum Spanning Tree WEIGHTED UNDIRECTED graph)=============*/
+// http://www.geeksforgeeks.org/greedy-algorithms-set-5-prims-minimum-spanning-tree-mst-2/
+// http://www.geeksforgeeks.org/greedy-algorithms-set-5-prims-mst-for-adjacency-list-representation/
+
+// Implementation using matrix representation for simplicity. GREEDY ALGORITHM
+//  O(V^2) time for graph matrix implementation
+//  O(E+V)*O(LogV) = O(E log V) time for graph adjacency implementation
+//  O(V) extra space in both cases
+
+// NOTE: Also, in case of unweighted graphs, any spanning tree is Minimum Spanning Tree and we can
+//       use either Depth or Breadth first traversal for finding a spanning tree
+
+int minKey(int key[], bool mstSet[]) {
+    int min = INT_MAX, min_index;
+
+    for (int v = 0; v < VRT; v++)
+    if (mstSet[v] == false && key[v] < min)
+        min = key[v], min_index = v;
+
+    return min_index;
+}
+
+void printMST(int parent[], int n, int graph[VRT][VRT]) {
+    cout << "\tEdge   Weight\n";
+    for (int i = 1; i < VRT; i++)
+        cout << "\t" << parent[i] << " - " << i << "    " << graph[i][parent[i]] << endl;
+}
+
+void primMST (int graph[VRT][VRT]) {
+    int parent[VRT];     // Array to store constructed MST
+    int key[VRT];        // Key values to pick minimum weight edge in cut (SHOULD BE A MIN-HEAP)
+    bool mstSet[VRT];    // To represent set of vertices not yet included in MST (false==not incl)
+                          // (SHOULD BE A SET)
+
+    for (int i = 0; i < VRT; i++) {
+        key[i] = INT_MAX, mstSet[i] = false;
+    }
+
+    // Always include first 1st vertex in MST.
+    key[0]    =  0;  // Make key 0 so that this vertex is picked as first vertex
+    parent[0] = -1;  // First node is always root of MST
+
+    for (int count = 0; count < VRT-1; count++) {
+        int u     = minKey(key, mstSet);
+        mstSet[u] = true;
+
+        for (int v = 0; v < VRT; v++) {
+            // Update the key only if graph[u][v] is smaller than key[v]
+            if (graph[u][v] && mstSet[v] == false && graph[u][v] <  key[v]) {
+                parent[v]  = u, key[v] = graph[u][v];
+            }
+        }
+    }
+
+    printMST(parent, VRT, graph);
+}
+
+/* ===============DIJKSTRA ALGORITHM (Shortest Path Among a Node and All Others)==================*/
+// http://www.geeksforgeeks.org/greedy-algorithms-set-6-dijkstras-shortest-path-algorithm/
+// http://www.geeksforgeeks.org/greedy-algorithms-set-7-dijkstras-algorithm-for-adjacency-list-\
+//        representation/
+
+int minDistance(int dist[], bool sptSet[]) {
+    int min = INT_MAX, min_index;
+
+    for (int v = 0; v < VRT; v++)
+        if (sptSet[v] == false && dist[v] <= min)
+            min = dist[v], min_index = v;
+
+    return min_index;
+}
+void printDIJKSTRA(int dist[], int n) {
+    cout << "\tVertex   Distance from Source" << endl;
+    for (int i = 0; i < VRT; i++)
+        cout << "\t" << i << "\t\t " << dist[i] << endl;
+}
+
+void dijkstraSP(int graph[VRT][VRT], int src) {
+    int dist[VRT];  // Output array.  dist[i] holds the shortest distance from src to i.
+                    // Incrementally updated
+
+    bool sptSet[VRT]; // sptSet[i] will true if vertex i is included in shortest
+                      // path tree or shortest distance from src to i is finalized
+
+    for (int i = 0; i < VRT; i++) {
+        dist[i] = INT_MAX, sptSet[i] = false;
+    }
+
+    dist[src] = 0; // So that it is first picked
+
+    // Find current shortest path for all vertices
+    for (int count = 0; count < VRT-1; count++)
+    {
+        // Pick the minimum distance vertex from the set of vertices not yet processed.
+        int u     = minDistance(dist, sptSet);
+        sptSet[u] = true;
+
+        for (int v= 0; v<VRT; v++) { //Update dist value of the adjacent vertices of u
+
+            // Update dist[v] only if isn't in sptSet and total weight of path from src to v
+            // through u is smaller than current value of dist[v]
+            if (!sptSet[v]  && graph[u][v] && dist[u] != INT_MAX &&  dist[u]+graph[u][v] < dist[v] )
+                dist[v] = dist[u] + graph[u][v];
+        }
+    }
+
+    printDIJKSTRA(dist, VRT);
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -449,6 +566,36 @@ void numConnectedComponents_example() {
     int num = numConnectedComponents (g, result);
     cout << "Number of connected components is : " << num << endl;
 }
+void primMST_example() {
+    int graph[VRT][VRT] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
+                           {4, 0, 8, 0, 0, 0, 0, 11, 0},
+                           {0, 8, 0, 7, 0, 4, 0, 0, 2},
+                           {0, 0, 7, 0, 9, 14, 0, 0, 0},
+                           {0, 0, 0, 9, 0, 10, 0, 0, 0},
+                           {0, 0, 4, 0, 10, 0, 2, 0, 0},
+                           {0, 0, 0, 14, 0, 2, 0, 1, 6},
+                           {8, 11, 0, 0, 0, 0, 1, 0, 7},
+                           {0, 0, 2, 0, 0, 0, 6, 7, 0}
+                          };
+
+    cout << "PRIM MST for graph is: " << endl;
+    primMST(graph);
+}
+void dijkstraSP_example() {
+    int graph[VRT][VRT] = {{0, 4, 0, 0, 0, 0, 0, 8, 0},
+                           {4, 0, 8, 0, 0, 0, 0, 11, 0},
+                           {0, 8, 0, 7, 0, 4, 0, 0, 2},
+                           {0, 0, 7, 0, 9, 14, 0, 0, 0},
+                           {0, 0, 0, 9, 0, 10, 0, 0, 0},
+                           {0, 0, 4, 0, 10, 0, 2, 0, 0},
+                           {0, 0, 0, 14, 0, 2, 0, 1, 6},
+                           {8, 11, 0, 0, 0, 0, 1, 0, 7},
+                           {0, 0, 2, 0, 0, 0, 6, 7, 0}
+                          };
+
+    cout << "DIJKSTRA SHORTEST PATHS from 0 to all nodes have weights: " << endl;
+    dijkstraSP(graph, 0);
+}
 
 /* ===============================================================================================*/
 int main() {
@@ -460,6 +607,8 @@ int main() {
     isCyclic_example();
     isTree_example();
     numConnectedComponents_example();
+    primMST_example();
+    dijkstraSP_example();
 }
 
 /* =======================================TODO====================================================*/
