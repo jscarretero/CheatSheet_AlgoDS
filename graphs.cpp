@@ -386,6 +386,9 @@ void primMST (int graph[VRT][VRT]) {
 // http://www.geeksforgeeks.org/greedy-algorithms-set-7-dijkstras-algorithm-for-adjacency-list-\
 //        representation/
 
+// O(V^2) if matrix representation. If graph represented using adjacency list,  O(E log V) using
+// binary heap. O(V) space
+
 int minDistance(int dist[], bool sptSet[]) {
     int min = INT_MAX, min_index;
 
