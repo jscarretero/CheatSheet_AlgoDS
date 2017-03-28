@@ -228,7 +228,7 @@ bool pathAmong (Graph&g, int s, int d, list<int>& result) {
     return pathAmong_util(g, s, d, visited, result);
 }
 
-/* =====================================Is Cyclic a Directed Graph?===============================*/
+/* ============================Is Cyclic a Directed Graph?========================================*/
 // http://www.geeksforgeeks.org/detect-cycle-in-a-graph/
 // http://www.geeksforgeeks.org/detect-cycle-undirected-graph/
 // http://stackoverflow.com/questions/2869647/why-dfs-and-not-bfs-for-finding-cycle-in-graphs
@@ -236,23 +236,9 @@ bool pathAmong (Graph&g, int s, int d, list<int>& result) {
 // IDEA:
 // DFS over BFS because: (i) easier to implement, (ii) Once DFS finds a cycle, the stack contain the
 // nodes forming the cycle. The same is not true for BFS.
-/*
-bool isCyclic_util (Graph& g, int s, vector<bool>& visited, vector<bool>& inProcess) {
-    if (!visited[s]) {
-        visited[s]   = true;
-        inProcess[s] = true;
-        for (auto& a : g.adjacent(s)) {
-            if (inProcess[a]) return true;
-            if (!visited[i]) {
-                bool is = isCyclic_util(g, a, visited, inProcess);
-                if (is) return true;
-            }
-        }
-    }
-    inProcess[s] = false;
-    return false;
-}
-*/
+
+// IMPORTANT: For DIRECTED graphs! For undirected see belows
+
 bool isCyclic_util (Graph& g, int s, vector<bool>& visited, vector<bool>& inProcess) {
     visited[s]   = true;
     inProcess[s] = true;
@@ -275,6 +261,59 @@ bool isCyclic (Graph& g, vector<bool>& cycle) {
         if (isCyclic_util(g, i, visited, cycle)) found = true;
     }
     return found;
+}
+
+/* ====================================Is Tree? (Undirected Graph)================================*/
+//http://geeksquiz.com/check-given-graph-tree/
+
+bool isCyclicUndirected_util (Graph& g, int s, vector<bool>& visited, int parent) {
+    // O(V + E) time, O(V) space
+    visited[s] = true;
+    for (auto& a: g.adjacent(s)) {
+        if (!visited[a]) {
+            bool is = isCyclicUndirected_util(g, a, visited, s);
+            if (is) return true;
+        } else if (parent != a) return true;
+    }
+    return false;
+}
+
+// IDEA: Check there is no cycle and all vertex are connected
+bool isTree (Graph& g) {
+    // O(V + E) time, O(V) space
+    vector<bool> visited (g.numVertices(), false);
+
+    if (isCyclicUndirected_util(g, 0, visited, -1)) {return false; }
+
+    for (int i = 0; i < g.numVertices(); i++)
+        if (!visited[i]) {return false; }
+    return true;
+}
+
+/* ============================Number of Connected Components in Undirected Graph=================*/
+// http://quiz.geeksforgeeks.org/connected-components-in-an-undirected-graph/  (modification)
+void numConnectedComponents_util (Graph& g, int s, vector<bool>& visited, set<int>& result) {
+    // O(V + E) time, O(V) space, modification of DFS
+    visited[s] = true;
+    result.insert(s);
+    for (auto& a: g.adjacent(s)) {
+        if (!visited[a]) {
+            numConnectedComponents_util(g, a, visited, result);
+        }
+    }
+}
+
+int numConnectedComponents (Graph& g, vector<set<int> >& result) {
+    vector<bool> visited(g.numVertices(), false);
+
+    for (int i = 0; i < g.numVertices(); i++) {
+        if (!visited[i]) {
+            set<int> component;
+            numConnectedComponents_util(g, i, visited, component);
+            result.push_back(component);
+        }
+    }
+    return result.size();
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -380,6 +419,37 @@ void isCyclic_example() {
         if (incycle[i]) cout << i << ", ";
     }   cout << endl;
 }
+void isTree_example() {
+    Graph g(5);
+    g.addEdge(1, 0);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(2, 0);
+    g.addEdge(0, 3);
+    g.addEdge(3, 0);
+    g.addEdge(3, 4);
+    g.addEdge(4, 3);
+    cout << "Graph is tree is: " << isTree(g) << endl;
+}
+void numConnectedComponents_example() {
+    Graph g(7);
+    g.addEdge(1, 0);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(2, 0);
+    g.addEdge(0, 3);
+    g.addEdge(3, 0);
+    g.addEdge(3, 4);
+    g.addEdge(4, 3);
+
+    g.addEdge(5, 6);
+    g.addEdge(6, 5);
+
+    vector<set<int> > result;
+    int num = numConnectedComponents (g, result);
+    cout << "Number of connected components is : " << num << endl;
+}
+
 /* ===============================================================================================*/
 int main() {
     BFS_example();
@@ -388,6 +458,8 @@ int main() {
     isBipartite_example();
     isPath_example();
     isCyclic_example();
+    isTree_example();
+    numConnectedComponents_example();
 }
 
 /* =======================================TODO====================================================*/
