@@ -436,6 +436,142 @@ void dijkstraSP(int graph[VRT][VRT], int src) {
     printDIJKSTRA(dist, VRT);
 }
 
+/* ================================Sliding Puzzle=================================================*/
+// c
+// Solved using BFS (minimum path guaranteed). N=9 Search space is N! (O(N!) time, O(N!) space too
+//
+// Memory and time are limiting, this is why other AI algorithms like A*, or IDA* are often used.
+// The idea is to have a cost function that given the current cost to reach a given state and an
+// (under)estimation of the  cost to reach the final solution, it prioritizes and first visits those
+// states with less cost.
+// Here I show a simple BFS implementation, that guarantees the set of minimum movements to reach a
+// final state.
+
+class State {
+    private:
+        string  status;
+        short   zeroPos;  // to avoid 0 searches in status
+        char    prevMove;
+        char    n;
+
+    private:
+        int idx (int row, int col)                 { return (col + row * (int) n); }
+        void fromIdx (int idx, int& row, int& col) { row = idx / (int) n; col = idx % (int) n; }
+
+        bool canApply (char move) {
+            if (move == 'r') { return ((zeroPos % n) != 0);   }
+            if (move == 'l') { return ((zeroPos % n) != n-1); }
+            if (move == 'u') { return ((zeroPos / n) != n-1);   }
+            if (move == 'd') { return ((zeroPos / n) != 0); }
+        }
+
+        void apply (char move) {
+            if (canApply(move)) { // a bit redundant if condition
+                int row, col, movingPos;
+                fromIdx(zeroPos, row, col);
+                if (move == 'r') movingPos = idx(row, col-1);
+                if (move == 'l') movingPos = idx(row, col+1);
+                if (move == 'u') movingPos = idx(row+1, col);
+                if (move == 'd') movingPos = idx(row-1, col);
+
+                status[zeroPos] = status[movingPos]; status[movingPos] = '0';
+                zeroPos  = movingPos; prevMove = move;
+            }
+        }
+
+    public:
+        State (string initial) : status(initial), prevMove('\0') {
+            zeroPos  = initial.find("0");
+            n        = sqrt(status.size());
+        }
+
+        //~State(); //not needed
+
+        void reverse() {
+            if      (prevMove == 'l') apply('r');
+            else if (prevMove == 'r') apply('l');
+            else if (prevMove == 'u') apply('d');
+            else if (prevMove == 'd') apply('u');
+        }
+
+        list<State> moves() {
+            list<State> result;
+            if (canApply('u'))  { State up    = *this;  up.apply('u');    result.push_back(up);    }
+            if (canApply('d'))  { State down  = *this;  down.apply('d');  result.push_back(down);  }
+            if (canApply('r'))  { State right = *this;  right.apply('r'); result.push_back(right); }
+            if (canApply('l'))  { State left  = *this;  left.apply('l');  result.push_back(left);  }
+            return result;
+        }
+
+        char getPrevMove() { return prevMove; }
+        string getStatus() { return status; }
+
+        // http://stackoverflow.com/questions/4421706/operator-overloading
+        // Needed for set / map
+        friend bool operator<  (const State& l, const State& r) { return l.status < r.status; }
+        friend bool operator>= (const State& l, const State& r) { return !(l < r); }
+        friend bool operator>  (const State& l, const State& r) { return   r < l; }
+        friend bool operator<= (const State& l, const State& r) { return !(r < l); }
+        friend bool operator== (const State& l, const State& r) { return l.status == r.status; }
+        friend bool operator!= (const State& l, const State& r) { return !(l == r); }
+        // TODO: Unordered_map and unordered_set need operator==, operator!= and hash operator
+};
+
+
+bool reconstructMoves(State& current, State& initial, set<State>& visited, string& result) {
+    if (current == initial) {
+        result = "";
+        return true;
+    }
+
+    string tmp = "";
+    State reversed = current;
+    reversed.reverse();
+
+    if (visited.find(reversed) != visited.end()) {
+        reversed = *visited.find(reversed); // to be able to get original move
+        if (reconstructMoves (reversed, initial, visited, tmp)) {
+            result = tmp + string(1,current.getPrevMove());
+            return true;
+        } else {
+            result = "";
+            return false;
+        }
+    } else {
+        result = "";
+        return false;
+    }
+}
+
+string slidingPuzzle(string start, string end)
+{
+    list<State> toVisit;
+    set<State>  visited;
+    State       initialState(start);
+    State       finalState(end);
+
+
+    toVisit.push_back(start);
+    visited.insert(start);
+
+    while (!toVisit.empty()) {
+
+        State current = toVisit.front(); toVisit.pop_front();
+        if (current == finalState) {
+            string result = ""; reconstructMoves(current, initialState, visited, result);
+            return result;
+        }
+        list<State> potentialMoves = current.moves();
+        for (auto& s : potentialMoves) {
+            if (visited.find(s) == visited.end()) {
+                visited.insert(s);
+                toVisit.push_back(s);
+            }
+        }
+    }
+    return "NO";
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void BFS_example() {
     Graph g(5);
@@ -599,6 +735,10 @@ void dijkstraSP_example() {
     cout << "DIJKSTRA SHORTEST PATHS from 0 to all nodes have weights: " << endl;
     dijkstraSP(graph, 0);
 }
+void slidingPuzzle_example() {
+    string result = slidingPuzzle("123560784", "123586074");
+    cout << "Sliding puzzle moves are: " << result << endl;
+}
 
 /* ===============================================================================================*/
 int main() {
@@ -612,6 +752,7 @@ int main() {
     numConnectedComponents_example();
     primMST_example();
     dijkstraSP_example();
+    slidingPuzzle_example();
 }
 
 /* =======================================TODO====================================================*/
