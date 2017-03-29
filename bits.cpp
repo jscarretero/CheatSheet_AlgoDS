@@ -128,6 +128,22 @@ int sum_ (int a, int b) {
     return sum_ (sum, carry << 1);
 }
 
+/* ===============================Check if Little Endian==========================================*/
+bool isLittleEndian() {
+    int num = 1;
+    char* ptr = (char*) &num;
+    return (*ptr == 1);
+}
+
+/* =================================Swap Little and Big Endian Representation=====================*/
+int swapLittleBigEndian(int num) {
+    int swapped = ((num>>24) & 0xff)      | // move byte 3 to byte 0
+                   ((num<<8) & 0xff0000)  | // move byte 1 to byte 2
+                   ((num>>8) & 0xff00)    | // move byte 2 to byte 1
+                   ((num<<24)& 0xff000000); // byte 0 to byte 3
+    return swapped;
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void printBinary_example() {
     cout << "-1  is: "; printBinary(-1);
@@ -167,6 +183,12 @@ void swapEvenOddBits_example() {
 void sum_example() {
     cout << "Adding 127 and 1151 is : " << sum_(127,1151) << endl;
 }
+void isLittleEndian_example() {
+    cout << "CPU is little endian: " << isLittleEndian() << endl;
+}
+void swapLittleBigEndian_example() {
+    cout << "Swapping Little Endian to Big Endian: " << swapLittleBigEndian(1) << endl;
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -178,6 +200,8 @@ int main () {
     bitFlipsToTransform_example();
     swapEvenOddBits_example();
     sum_example();
+    isLittleEndian_example();
+    swapLittleBigEndian_example();
 }
 
 /* =======================================TODO====================================================*/
