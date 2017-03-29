@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <map>
 #include <list>
 #include <stack>
 #include <algorithm>
@@ -437,7 +438,7 @@ void dijkstraSP(int graph[VRT][VRT], int src) {
 }
 
 /* ================================Sliding Puzzle=================================================*/
-// c
+// http://www.geeksforgeeks.org/branch-bound-set-3-8-puzzle-problem/  (modification)
 // Solved using BFS (minimum path guaranteed). N=9 Search space is N! (O(N!) time, O(N!) space too
 //
 // Memory and time are limiting, this is why other AI algorithms like A*, or IDA* are often used.
@@ -517,7 +518,6 @@ class State {
         // TODO: Unordered_map and unordered_set need operator==, operator!= and hash operator
 };
 
-
 bool reconstructMoves(State& current, State& initial, set<State>& visited, string& result) {
     if (current == initial) {
         result = "";
@@ -570,6 +570,132 @@ string slidingPuzzle(string start, string end)
         }
     }
     return "NO";
+}
+
+/* ==============================2 Water-Jug Puzzle=================================================*/
+// Solved using BFS (minimum path guaranteed). N & M liters, O(N*M) time(search space), O(N*M) space
+// Generalizing to N jugs, this is exponential
+// http://pages.cs.wisc.edu/~bsettles/cs540/lectures/03_search.pdf
+// http://www.geeksforgeeks.org/two-water-jug-puzzle/
+// https://kartikkukreja.wordpress.com/2013/10/11/water-jug-problem/
+// http://aass.oru.se/~mbl/AI/lectures.2011/AI-2.pdf
+
+class Jugs {
+    private:
+        vector<int>   status;
+        vector<int>   maxCap;
+        pair<int,int> prevMove;  //src, dst  (if dst == -1 then it is floor)
+                                 //          (if src == -1 then it is river)
+
+        bool pour (int src, int dst) {
+            bool can = false;
+
+            if (src == -1 && status[dst] < maxCap[dst]) { // Fill a jug from river
+                status[dst] = maxCap[dst];
+                can         = true;
+            } else {
+                if (dst == -1 && status[src] > 0) {  // Empty a jug to floor
+                    status[src] = 0;
+                    can         = true;
+                } else  if (status[src] > 0 && status[dst] < maxCap[dst]) {
+                    // Move water from a jug to another (stop when dst gets full or src empty)
+                    // Water cannot be spilled
+                    int tmp = status[src];
+                    status[src] = max(0, status[src]-(maxCap[dst] - status[dst]) );
+                    status[dst] = min(maxCap[dst], status[dst] + tmp );
+                    can = true;
+                }
+            }
+            if (can) prevMove = pair<int,int>(src, dst);
+            return can;
+        }
+
+    public:
+        Jugs(vector<int> initialState, vector<int> maxCapacities) : status(initialState) {
+            prevMove = pair<int,int>(-1,-1);
+            maxCap   = maxCapacities;
+            // TODO: check same size and initialStates are consistent wrt maxCapacities
+        }
+
+        list<Jugs> moves() {
+            list<Jugs> result;
+            for (int s = -1; s < (int) status.size(); s++) {
+                for ( int d = -1; d < (int) status.size(); d++ ) {
+                    if (s != d) {
+                        Jugs tmp = *this;
+                        if (tmp.pour(s, d)) { result.push_back(tmp); }
+                    }
+                }
+            }
+            return result;
+        }
+
+        void print () {
+            cout << "[ ";
+            for (auto&e : status) {
+                cout << e << ", ";
+            } cout << " ] ";
+            cout << "Move: " << prevMove.first << " to " << prevMove.second << endl;
+        }
+
+        //void reverse();
+        vector<int>   getStatus()   {return status;   }
+        pair<int,int> getPrevMove() {return prevMove; }
+        bool isFinal (int obj)      {for(auto& e:status) {if (e==obj) return true;} return false;}
+
+        // Needed for set / map  (< ... operators for vector is to check lexicographically contents)
+        friend bool operator<  (const Jugs& l, const Jugs& r) { return l.status < r.status; }
+        friend bool operator>= (const Jugs& l, const Jugs& r) { return !(l < r); }
+        friend bool operator>  (const Jugs& l, const Jugs& r) { return   r < l; }
+        friend bool operator<= (const Jugs& l, const Jugs& r) { return !(r < l); }
+        friend bool operator== (const Jugs& l, const Jugs& r) { return l.status == r.status; }
+        friend bool operator!= (const Jugs& l, const Jugs& r) { return !(l == r); }
+        // TODO: Unordered_map and unordered_set need operator==, operator!= and hash operator
+};
+
+stack<pair<int,int> > reconstructMovesWater (Jugs& final, Jugs& initial, map<Jugs,Jugs>& visited) {
+    Jugs& current = final;
+    stack<pair<int,int> > result;
+
+    while (current != initial) {
+        result.push(current.getPrevMove());
+        if (visited.find(current) != visited.end()) {
+            //operator[] needs the default constructor for types, Jugs has particular constructor...
+            current = visited.find(current)->second;
+        } else {
+            pair<int,int> tmp(-2,-2);
+            result = stack<pair<int,int> >(); result.push(tmp);
+            return result;
+        }
+    }
+    return result;
+}
+
+stack<pair<int,int> > waterJugs (vector<int> initial, vector<int> maxCapacities, int finalValue) {
+    list<Jugs>      toVisit;
+    map<Jugs, Jugs> visited; // map from dst jug status to src jug status
+
+    Jugs initialState(initial, maxCapacities);
+    toVisit.push_back(initialState);
+    //operator[] needs the default constructor for types, Jugs has particular constructor...
+    visited.insert(std::make_pair(initialState,initialState));
+
+    while (!toVisit.empty()) {
+        Jugs j = toVisit.front(); toVisit.pop_front();
+        if (j.isFinal(finalValue)) {
+            return reconstructMovesWater (j, initialState, visited);
+        }
+        list<Jugs> potentialMoves = j.moves();
+        for (auto &a : potentialMoves) {
+            if (visited.find(a) == visited.end()) {
+                visited.insert(std::make_pair(a,j));
+                toVisit.push_back(a);
+            }
+        }
+    }
+    pair<int,int> tmp(-2,-2);
+    stack<pair<int,int> > result; result.push(tmp);
+    return result;
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -739,7 +865,16 @@ void slidingPuzzle_example() {
     string result = slidingPuzzle("123560784", "123586074");
     cout << "Sliding puzzle moves are: " << result << endl;
 }
-
+void waterJugs_example() {
+    vector<int> initialCapacities = {0,0};
+    vector<int> maxCap = {3, 4};
+    stack<pair<int,int> > result = waterJugs (initialCapacities, maxCap, 2);
+    cout << "Water Jug problem solution is: ";
+    for (stack<pair<int,int> > dump = result; !dump.empty(); dump.pop()) {
+        cout << "(" << dump.top().first << " to " << dump.top().second << ") ";
+    }
+    cout << endl;
+}
 /* ===============================================================================================*/
 int main() {
     BFS_example();
@@ -753,6 +888,7 @@ int main() {
     primMST_example();
     dijkstraSP_example();
     slidingPuzzle_example();
+    waterJugs_example();
 }
 
 /* =======================================TODO====================================================*/
