@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unordered_map>
+#include <list>
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -143,6 +144,7 @@ string compressString (string& str) {
 
 }
 /* ========================================Is Rotation============================================*/
+// From 'Cracking the Coding Interview'
 bool isRotation (string& str1, string& str2) {
     if ( (str1.size() == str2.size() ) && str1.size() > 0) {
         string strConcat = str1 + str1;
@@ -150,6 +152,39 @@ bool isRotation (string& str1, string& str2) {
     }
     return false;
 }
+
+/* ==================================Search for Patterns==========================================*/
+// http://www.geeksforgeeks.org/searching-for-patterns-set-1-naive-pattern-searching/
+list<int> naive_pattern_search(const char *pat, const char *txt) {
+    //Time complexity: O((N-M) * M) = O(NM-M^2) = O(YX-X^2)
+    int X = strlen(pat);
+    int Y = strlen(txt);
+    list<int> result;
+
+    /* A loop to slide pat[] one by one */
+    for (int i = 0; i <= Y - X; i++) {
+        int j;
+
+        for (j = 0; j < X; j++) {
+            if (txt[i+j] != pat[j]) break;
+        }
+        if (j == X)  { // if pat[0...M-1] = txt[i, i+1, ...i+M-1]
+           result.push_back(i);
+        }
+    }
+    return result;
+}
+
+// Knuth-Morris-Pratt algorithm (KMP)
+// ----------------------------------
+// http://www.geeksforgeeks.org/searching-for-patterns-set-2-kmp-algorithm/
+//
+// Time complexity O(N) (recall M <= N)
+// The basic idea behind KMP is: whenever we detect a mismatch (after some matches), we already know
+// some of the characters in the text (since they matched the pattern characters prior to the
+// mismatch). We take advantage of this information to avoid matching the characters that we know
+// will anyway match
+
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void allUniqueChars_example() {
@@ -187,6 +222,16 @@ void isRotation_example() {
     string str2 = "cdab";
     cout << "Is '" << str1 << "' a rotation of '" << str2<< "' ? " << isRotation(str1,str2) << endl;
 }
+void naivePatternSearch_example() {
+    string txt = "AABAACAADAABAAABAA";
+    string pat = "AABA";
+    list<int> indexes = naive_pattern_search(&pat[0], &txt[0]);
+    cout << "Pattern search returns indexes: [";
+    for (auto& p : indexes) {
+        cout << p << ", ";
+    }
+    cout << "]" << endl;
+}
 
 /* ===============================================================================================*/
 int main () {
@@ -196,6 +241,7 @@ int main () {
     replaceSpacesWithString_example();
     compressString_example();
     isRotation_example();
+    naivePatternSearch_example();
 }
 
 /* =======================================TODO====================================================*/
