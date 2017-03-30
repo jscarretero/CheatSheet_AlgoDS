@@ -93,7 +93,82 @@ bool ratMaze (int maze[N][N], int x, int y, int sol[N][N]) {
     return false;
 }
 // This can be solved in linear time using BFS (looking for the shortest path from some source to
-// the destination)
+// the destination). This backtracking solution visits a cell or a path multiple times, whereas
+// a BFS solution does not
+
+/* ================================N Queens Problem===============================================*/
+// http://www.geeksforgeeks.org/backtracking-set-3-n-queen-problem/
+// A queen can move horizontally, vertically and diagonally
+
+bool isSafe(int board[N][N], int row, int col) {
+    // We need to check only left side for attacking queens
+    int i, j;
+
+    for (i = 0; i < col; i++)
+        if (board[row][i]) return false;
+
+    for (i = row, j = col; i >= 0 && j >= 0; i--, j--)
+        if (board[i][j]) return false;
+
+    for (i = row, j = col; j >= 0 && i < N; i++, j--)
+        if (board[i][j]) return false;
+    return true;
+}
+
+bool nQueens (int board[N][N], int col) {
+    // O(N! * N) time (number of permutations)
+    if (col >= N) return true;
+
+    for (int i = 0; i < N; i++) {
+        if ( isSafe (board, i, col)) {
+            board[i][col] = 1;
+            if (nQueens(board, col+1)) return true;
+            board[i][col] = 0;
+        }
+    }
+    return false;
+}
+
+void printNQueensSolution(int board[N][N]) {
+    for (int i = 0; i < N; i++) {
+        cout << "\t";
+        for (int j = 0; j < N; j++) {
+            cout << board[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+bool allNQueens (int board[N][N], int col) {
+    if (col == N) {
+            printNQueensSolution(board); //change
+            cout << endl;
+        return true;
+    }
+    bool some = false; //changed
+    for (int i = 0; i < N; i++) {
+        if ( isSafe (board, i, col)) {
+                board[i][col] = 1;
+            some = allNQueens(board, col+1) || some;  //change
+            board[i][col] = 0;
+        }
+    }
+    return some; //changed
+}
+
+// If there's only so many possible states for the backtracking to explore, that's all it can
+// explore. If you ensure your algorithm only visits each possible state once (and with a constant
+// bound on time per state), then the number of possible states to explore is now an upper bound on
+// the time complexity - irrespective of whether your algorithm uses backtracking
+
+/* ==============================m- Graph Coloring================================================*/
+// http://www.geeksforgeeks.org/backttracking-set-5-m-coloring-problem/
+
+#define V 4
+
+bool graphColoring (bool graph[V][V], int vrtx, int m, int colors[V][V]) {
+
+}
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void stringPermutations_example() {
@@ -160,12 +235,23 @@ void ratMaze_example() {
         cout << "No solution found" << endl;
     }
 }
+void nQueens_example() {
+    int board[N][N] = { {0, 0, 0, 0},
+                        {0, 0, 0, 0},
+                        {0, 0, 0, 0},
+                        {0, 0, 0, 0}
+    };
+    cout << "N-Queens solutions are : " << endl;
+    allNQueens(board, 0);
+}
+
 /* ===============================================================================================*/
 int main() {
     stringPermutations_example();
     stringPermutationsNoRepeats_example();
     allSubsets_example();
     ratMaze_example();
+    nQueens_example();
 }
 
 /* =======================================TODO====================================================*/
