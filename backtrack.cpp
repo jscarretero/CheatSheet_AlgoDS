@@ -1,6 +1,7 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <list>
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -161,6 +162,27 @@ bool allNQueens (int board[N][N], int col) {
 // bound on time per state), then the number of possible states to explore is now an upper bound on
 // the time complexity - irrespective of whether your algorithm uses backtracking
 
+/* =====================All Valid Combinations of n-pairs of Parenthesis==========================*/
+// From 'Cracking the Coding Interview'
+// No repeats allowed!!
+
+void validParenthesis (string& current_sol, vector<string>& solutions, int leftRem, int rightRem,
+                       int pos) {
+    // O(2^N) time
+    if (leftRem > rightRem || leftRem < 0) return;
+    if (!leftRem && !rightRem) { solutions.push_back(current_sol); return; }
+
+    if (leftRem > 0) {
+        current_sol[pos] = '(';
+        validParenthesis(current_sol, solutions, leftRem-1, rightRem, pos+1);
+    }
+
+    if (rightRem > leftRem)  {
+        current_sol[pos] = ')';
+        validParenthesis(current_sol, solutions, leftRem, rightRem-1, pos+1);
+    }
+}
+
 /* ==============================m- Graph Coloring================================================*/
 // http://www.geeksforgeeks.org/backttracking-set-5-m-coloring-problem/
 
@@ -182,6 +204,7 @@ bool canColor(bool graph[V][V], int vrtx, int c, int colors[V]) {
 }
 
 bool graphColoring (bool graph[V][V], int vrtx, int m, int colors[V]) {
+    // O(m^V) time
     if (vrtx == V) {
         printColoring(colors);
         return true;
@@ -192,6 +215,48 @@ bool graphColoring (bool graph[V][V], int vrtx, int m, int colors[V]) {
             colors[vrtx] = c;
             some = graphColoring(graph, vrtx+1, m, colors) || some;
             colors[vrtx] = -1;
+        }
+    }
+    return some;
+}
+
+/* ==============================All Hamiltonian Cycles===========================================*/
+// http://www.geeksforgeeks.org/backtracking-set-7-hamiltonian-cycle/
+// We start at vertex 0, it does no matter where we start, because all cycles must traverse all
+// vertices
+void printHamiltonian (list<int>& solution) {
+    cout << "\t";
+    for (auto& e: solution) {
+        cout << e << ", ";
+    }
+    cout << endl;
+}
+
+bool canJumpTo (bool graph[V][V], int src, int to, vector<int>& visited) {
+    if (!graph[src][to]) return false;
+    if (visited[to])     return false;
+    return true;
+}
+
+bool allHamiltonian (bool graph[V][V], int current, list<int>& current_sol, vector<int>& visited) {
+    // Time O(V!)
+    if (current_sol.size() == V) {
+        int first = current_sol.front();
+        int last  = current_sol.back();
+        if (graph[last][first]) {
+            printHamiltonian(current_sol);
+            return true;
+        } else return false;
+    }
+
+    bool some = false;
+    for (int i = 0; i < V; i++) {
+        if (canJumpTo(graph, current, i, visited)) {
+            current_sol.push_back(i);
+            visited[i] = true;
+            some = allHamiltonian(graph, i, current_sol, visited) || some;
+            visited[i] = false;
+            current_sol.pop_back();
         }
     }
     return some;
@@ -271,6 +336,20 @@ void nQueens_example() {
     cout << "N-Queens solutions are : ";
     allNQueens(board, 0);
 }
+void validParenthesis_example() {
+    int num = 3;
+    vector<string> solutions;
+    string current_sol;
+    for (int i = 0; i < num*2; i++)
+        current_sol = current_sol + "-";
+
+    validParenthesis(current_sol, solutions, num, num, 0);
+    cout << "Valid parenthesis strings for n=3 are : [";
+    for (auto& s: solutions) {
+        cout << s << ", ";
+    } cout << "]" << endl;
+
+}
 void graphColoring_example() {
     bool graph[V][V] = {{0, 1, 1, 1},
                         {1, 0, 1, 0},
@@ -284,8 +363,21 @@ void graphColoring_example() {
     bool res = graphColoring(graph, 0, 3, colors);
     if (!res) cout << "\tNone" << endl;
 }
-// http://www.geeksforgeeks.org/backtracking-set-7-hamiltonian-cycle/
-// All valid of n-pairs of parenthesis
+void allHamiltonian_example() {
+    bool graph[V][V] = {{0, 1, 1, 1},
+                        {1, 0, 1, 1},
+                        {1, 1, 0, 1},
+                        {1, 1, 1, 0}
+                       };
+    list<int> curr_sol;
+    vector<int> visited(4, false);
+    curr_sol.push_back(0);
+    visited[0] = true;
+    cout << "All Hamiltonian cycles are: " << endl;
+    bool found = allHamiltonian(graph, 0, curr_sol, visited);
+    if (!found) cout << "None" << endl;
+}
+
 /* ===============================================================================================*/
 int main() {
     stringPermutations_example();
@@ -293,7 +385,9 @@ int main() {
     allSubsets_example();
     ratMaze_example();
     nQueens_example();
+    validParenthesis_example();
     graphColoring_example();
+    allHamiltonian_example();
 }
 
 /* =======================================TODO====================================================*/
