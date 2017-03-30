@@ -130,6 +130,7 @@ bool nQueens (int board[N][N], int col) {
 }
 
 void printNQueensSolution(int board[N][N]) {
+    cout << endl;
     for (int i = 0; i < N; i++) {
         cout << "\t";
         for (int j = 0; j < N; j++) {
@@ -141,14 +142,13 @@ void printNQueensSolution(int board[N][N]) {
 
 bool allNQueens (int board[N][N], int col) {
     if (col == N) {
-            printNQueensSolution(board); //change
-            cout << endl;
+        printNQueensSolution(board); //change
         return true;
     }
     bool some = false; //changed
     for (int i = 0; i < N; i++) {
         if ( isSafe (board, i, col)) {
-                board[i][col] = 1;
+            board[i][col] = 1;
             some = allNQueens(board, col+1) || some;  //change
             board[i][col] = 0;
         }
@@ -166,8 +166,35 @@ bool allNQueens (int board[N][N], int col) {
 
 #define V 4
 
-bool graphColoring (bool graph[V][V], int vrtx, int m, int colors[V][V]) {
+void printColoring (int colors[V]) {
+    cout << "\t";
+    for (int i = 0; i < V; i++) {
+        cout << colors[i] << " ";
+    }
+    cout << endl;
+}
 
+bool canColor(bool graph[V][V], int vrtx, int c, int colors[V]) {
+    for (int i = 0; i < vrtx; i++) {
+        if (graph[vrtx][i] && colors[i] == c) return false;
+    }
+    return true;
+}
+
+bool graphColoring (bool graph[V][V], int vrtx, int m, int colors[V]) {
+    if (vrtx == V) {
+        printColoring(colors);
+        return true;
+    }
+    bool some = false;
+    for (int c = 0; c < m; c++) {
+        if ( canColor(graph, vrtx, c, colors) ) {
+            colors[vrtx] = c;
+            some = graphColoring(graph, vrtx+1, m, colors) || some;
+            colors[vrtx] = -1;
+        }
+    }
+    return some;
 }
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
@@ -241,10 +268,24 @@ void nQueens_example() {
                         {0, 0, 0, 0},
                         {0, 0, 0, 0}
     };
-    cout << "N-Queens solutions are : " << endl;
+    cout << "N-Queens solutions are : ";
     allNQueens(board, 0);
 }
+void graphColoring_example() {
+    bool graph[V][V] = {{0, 1, 1, 1},
+                        {1, 0, 1, 0},
+                        {1, 1, 0, 1},
+                        {1, 0, 1, 0},
+                       };
+    int colors[V];
+    for (int i = 0; i < V; i++) colors[i] = -1;
 
+    cout << "Graph 3-colorings are: " << endl;
+    bool res = graphColoring(graph, 0, 3, colors);
+    if (!res) cout << "\tNone" << endl;
+}
+// http://www.geeksforgeeks.org/backtracking-set-7-hamiltonian-cycle/
+// All valid of n-pairs of parenthesis
 /* ===============================================================================================*/
 int main() {
     stringPermutations_example();
@@ -252,6 +293,7 @@ int main() {
     allSubsets_example();
     ratMaze_example();
     nQueens_example();
+    graphColoring_example();
 }
 
 /* =======================================TODO====================================================*/
