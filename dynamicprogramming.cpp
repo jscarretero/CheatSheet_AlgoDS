@@ -2,9 +2,33 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <algorithm>
+#include <climits>
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+    int dp_sol;     // for the DP version
+};
+
+Node* newNode (int data) {
+    Node* tmp              = new Node;
+    tmp->data              = data;
+    tmp->dp_sol            = 0;
+    tmp->left = tmp->right = NULL;
+    return tmp;
+}
+
+void deleteTree (Node* root) {
+    if (!root) return;
+    deleteTree(root->left); deleteTree(root->right);
+    delete root;
+}
+
+/* ===============================================================================================*/
 // IMPORTANT:
 // Not all backtracking algorithms can be transformed into DP solutions.
 // Think about if a state in the search space can be reached by multiple other states, if the search
@@ -497,6 +521,139 @@ bool subsetSum_dyn (int S, vector<int> vals) {
     return subsetSum[vals.size()][S];
 }
 
+/*==============================Largest Independent Set (Binary Trees)============================*/
+// http://www.geeksforgeeks.org/largest-independent-set-problem/
+// Similar to House Robbing Problem and Number of Binary Strings without consecutive 1s
+// This code below is a modification, instead of returning the maximum size of allindependent sets,
+// we compute the maximum sum of all independent sets. The original problem is equivalent to this.
+// Change 'int including = root->data;' to 'int including = 1;'
+
+int largestIndependentSet (Node* root) {
+    // Backtracking solution: Worst Case is when tree is a list of Nodes.
+    // Time complexity is equivalent to the number of strings without consecutive 1s. O(2^N)
+    //
+    if (!root) return 0;
+    int excluding = largestIndependentSet (root->left) + largestIndependentSet(root->right);
+    int including = root->data;
+    if (root->left)  including += largestIndependentSet(root->left->left)  +
+                                  largestIndependentSet(root->left->right);
+    if (root->right) including += largestIndependentSet(root->right->left) +
+                                  largestIndependentSet(root->right->right);
+    return max (including, excluding);
+}
+
+int largestIndependentSet_dyn (Node* root) {
+    // Dynamic programming (top-bottom approach, easier) : O(N) time complexity, O(N) space complex.
+    if (!root) return 0;
+
+    // Check if we have to solution already computed
+    if (root->dp_sol) return root->dp_sol;
+
+    int excluding = largestIndependentSet_dyn (root->left) + largestIndependentSet_dyn(root->right);
+    int including = root->data;
+    if (root->left)  including += largestIndependentSet_dyn(root->left->left)  +
+                                  largestIndependentSet_dyn(root->left->right);
+    if (root->right) including += largestIndependentSet_dyn(root->right->left) +
+                                  largestIndependentSet_dyn(root->right->right);
+
+    // Memorize result and return it
+    root->dp_sol = max (excluding, including);
+    return root->dp_sol;
+}
+
+/* ===============================Weighted Job Sheduling==========================================*/
+// http://www.geeksforgeeks.org/weighted-job-scheduling/
+struct Job {
+    int start;
+    int finish;
+    int profit;
+};
+
+int closestNonOverlapping (vector<Job>& array, int p) {
+    for (int i = p-1; i >= 0; i--) { if (array[p].start >= array[i].finish) return i; }
+    return -1;
+}
+
+// We assume Job array is sorted by 'finish' time (increasingly)
+int jobScheduling (vector<Job>& array, int n) {
+    // Backtracking solution: O(2^n) time complexity
+    if (n <= 0) return 0;
+
+    int pos = closestNonOverlapping(array, n-1);
+
+    // Explore solutions that include job at position n and those solutions that do not.
+    // If we include it, then when backtracking we must start considering jobs from position 'pos'
+    // (because all those jobs at positions > 'pos' overlap with the job at position 'n' [current])
+    int include = array[n-1].profit + jobScheduling(array, pos+1);
+    int exclude = jobScheduling(array, n-1);
+    return max (include, exclude);
+}
+
+int jobScheduling_dyn (vector<Job>& array) {
+    int maxProfit[array.size() + 1];
+
+    for (int i = 0; i <= array.size(); i++) {
+        if (!i) maxProfit[i] = 0;
+        else {
+            int pos     = closestNonOverlapping(array, i-1);
+            int include = array[i-1].profit + maxProfit[pos+1];
+            int exclude =                     maxProfit[i-1];
+            maxProfit[i] = max (include, exclude);
+        }
+    }
+    return maxProfit[array.size()];
+}
+
+/* ==================Shortest Path with exactly k edges (directed+weighted graph)=================*/
+// http://www.geeksforgeeks.org/shortest-path-exactly-k-edges-directed-weighted-graph/
+// http://www.geeksforgeeks.org/count-possible-paths-source-destination-exactly-k-edges/
+
+#define V 4
+int shortestKPath (int graph[V][V], int src, int dst, int k) {
+    // Backtracking approach: O(V^k) time complexity
+    if (k==0 && (src == dst))               return 0;
+    if (k==1 && graph[src][dst] != INT_MAX) return graph[src][dst];
+    if (k < 0)                              return INT_MAX;
+
+    int shortest = INT_MAX;
+    for (int i = 0; i < V; i++) {
+        if (graph[src][i] != INT_MAX && i != src && i != dst) {
+            int cost = shortestKPath(graph, i, dst, k-1);
+            if (cost != INT_MAX) {
+                shortest = min (shortest, graph[src][i] + cost);
+            }
+        }
+    }
+    return shortest;
+}
+
+int shortestKPath_dyn (int graph[V][V], int src, int dst, int k) {
+    // Dynamic programming: O(V^3 * k) time complexity, O(V^2 * k) space
+    int shortestPath[V][V][k+1];
+
+    for (int s = 0; s <= k; s++) {
+        for (int i = 0; i < V; i++) {
+            for (int j = 0; j < V; j++) {
+                shortestPath[i][j][s] = INT_MAX;
+                if (s == 0 && i == j)                  shortestPath[i][j][s] = 0;
+                if (s == 1 && graph[i][j] != INT_MAX)  shortestPath[i][j][s] = graph[i][j];
+                if (s > 1) {
+                    for (int z = 0; z < V; z++) {
+                        if (i != z && z != j && graph[i][z] != INT_MAX &&
+                               shortestPath[z][j][s-1] != INT_MAX)
+                        {
+                            shortestPath[i][j][s] = min (shortestPath[i][j][s],
+                                                         shortestPath[z][j][s-1] + graph[i][z]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return shortestPath[src][dst][k];
+}
+
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void numWays_example() {
     int n = 10;
@@ -583,6 +740,41 @@ void subsetSum_example() {
     cout << "Is there a subset whose elements sum 25? : " <<subsetSum(sum, set, set.size()) <<endl;
     cout << "Is there a subset whose elements sum 25? : " <<subsetSum_dyn (sum, set)        <<endl;
 }
+void largestIndependentSet_example() {
+     Node *root                = newNode(20);
+     root->left                = newNode(8);
+     root->left->left          = newNode(4);
+     root->left->right         = newNode(12);
+     root->left->right->left   = newNode(10);
+     root->left->right->right  = newNode(14);
+     root->right               = newNode(22);
+     root->right->right        = newNode(25);
+
+     cout << "Maximum value across independent sets is : " << largestIndependentSet(root)    <<endl;
+     cout << "Maximum value across independent sets is : " << largestIndependentSet_dyn(root)<<endl;
+
+     deleteTree(root);
+}
+bool jobSortFunc(Job a, Job b) {return a.finish < b.finish;}
+void jobScheduling_example() {
+    vector<Job> arr = {{3, 10, 20}, {1, 2, 50}, {6, 19, 100}, {2, 100, 200}};
+
+    std::sort(arr.begin(), arr.end(), jobSortFunc);
+    // Function assumes sorted Job array by 'finish' time (using ugly c++11 lambda function syntax)
+    //std::sort(arr.begin(), arr.end(), [] (Job a, Job b) {return a.finish < b.finish} );
+    cout << "Maximum job scheduling profit is : " << jobScheduling(arr, arr.size()) << endl;
+    cout << "Maximum job scheduling profit is : " << jobScheduling_dyn(arr)         << endl;
+}
+void shortestKPath_example() {
+    int graph[V][V] = { {0, 10, 3, 2},
+                        {INT_MAX, 0, INT_MAX, 7},
+                        {INT_MAX, INT_MAX, 0, 6},
+                        {INT_MAX, INT_MAX, INT_MAX, 0}
+                       };
+    int u = 0, v = 3, k = 2;
+    cout << "Weight of shortest path is " << shortestKPath(graph,u,v,k)     << endl;
+    cout << "Weight of shortest path is " << shortestKPath_dyn(graph,u,v,k) << endl;
+}
 /* ===============================================================================================*/
 int main() {
     numWays_example();
@@ -596,6 +788,9 @@ int main() {
     colorHouses_example();
     knapsack_example();
     subsetSum_example();
+    largestIndependentSet_example();
+    jobScheduling_example();
+    shortestKPath_example();
 }
 
 /* =======================================TODO====================================================*/
