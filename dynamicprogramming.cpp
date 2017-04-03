@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <list>
 using namespace std;
 
 /* =========================Helper declarations and functions ====================================*/
@@ -10,10 +11,25 @@ using namespace std;
 // space can be encoded efficiently (also in space), and if you can find a solution for a given
 // state based on the solutions of smaller states that have been already visited (you must identify
 // which smallers states to access and how their solutions can be combined to generate a solution
-// for the bigger state).
+// for the bigger state). Normally you'll have a recurrence equation.
 // In addition to finding optimal solutions to some problem, dynamic programming can also be used
 // for counting the number of solutions
+//
 // https://en.wikipedia.org/wiki/Dynamic_programming
+// http://stackoverflow.com/questions/6164629/dynamic-programming-and-memoization-bottom-up-vs-top-\
+//        down-approaches
+//
+// Reconstruct answer:
+//         https://www.quora.com/How-do-I-reconstruct-the-actual-optimal-solution-obtained-using-\
+//                 dynamic-programming
+//         http://stackoverflow.com/questions/29447416/printing-the-path-traversed-in-a-dynamic-\
+//                programming-solution
+//         https://www.quora.com/How-do-I-print-dynamic-programming-solutions
+//
+// Reconstruct all answers:
+//          https://www.quora.com/Is-there-a-way-to-print-out-all-solutions-to-the-0-1-Knapsack-\
+//                  problem-using-dynamic-programming-in-O-nC-time
+//
 
 /* ==============================Number of ways to Cover a Distance===============================*/
 // http://www.geeksforgeeks.org/count-number-of-ways-to-cover-a-distance/
@@ -202,10 +218,223 @@ void maxSubMatrixOnes_dyn (int mat[R][C], int& r, int& c, int& s) { // r row, c 
     }
 }
 
+/* ==============================Egg Dropping Problem=============================================*/
+// http://www.geeksforgeeks.org/dynamic-programming-set-11-egg-dropping-puzzle/
+// http://datagenetics.com/blog/july22012/index.html
+// https://www.reddit.com/r/programming/comments/wxmyc/the_two_egg_problem/
+
+// A binary search solution will not work (optimally) for two eggs. Let’s imagine we did try a
+// binary search and dropped our first egg from floor 50. If it broke, we’d be instantly reduced to
+// a one egg problem, so then we would have to start with our last egg from floor 1 and keep going
+// up one floor at a time until that breaks. As a worst case, it will take us 50 drops.
+// We can do better … : What happens if we started off with our first egg going up by floors ten at
+// a time? We can start dropping our egg from floor 10; if it survives we try floor 20, then floor
+// 30...  The worst case would be if the solution was on floor 99, and this would take us nine more
+// drops to determine. The worst case therefore, if we go by tens, is 19 drops.
+//
+// What we need is a strategy that tries to make solutions to all possible answers the same depth
+// (same number of drops). The way to reduce the worst case is to attempt to make all cases take the
+// same number of drops. If the solution lays somewhere in a floor low down, then we have
+// extra-headroom when we need to step by singles, but, !!!! as we get higher up the building, we’ve
+// already used drop chances to get there, so there we have less drops left when we have to switch
+// to going floor-by-floor!!! . What we need is a solution that minimizes our maximum regret.
+//
+// n + (n-1) + (n-2) + (n-3) + (n-4) + ... + 1  >=  100  --> min { n(n+1)/2 >= 100 } --> n == 14
+//
+// For more than 2 eggs: We need to select our first egg such that, if it breaks, or does not break,
+// it results in a problem, which recursively is now a two egg problem, that we already know how to
+// solve to minimize maximum regret!
+//
+// If we drop an egg from floor n, one of two events happens:
+//    1) The egg breaks, so now our problem is reduced to a tower of height n-1, and we now have
+//       e-1 eggs.
+//    2) The egg doesn't break and now we need to check k-n floors and we still have e eggs.
+//
+//   Remember we need to mimimize the number of drops in the worst case, so we take the higher (max)
+//   of these two situations, and select the floor which yields the minimum number of drops.
+
+
+int eggDrop (int e, int f) {
+    // Backtracking : O (2^f)  ?¿ SUM(1 <= t <= f, (f choose t) ) = O(2^f)
+    if (f <= 1) return f;
+    if (e == 1) return f;
+
+    int min_tries = f;
+    for (int i = 1; i <= f; i++) {
+        min_tries = min ( min_tries , 1 + max (eggDrop (e-1, i-1), // egg breaks
+                                               eggDrop (e,   f-i)  // egg does not break
+                                              )
+                        );
+    }
+    return min_tries;
+}
+
+int eggDrop_dyn (int e, int f) {
+    // Dynamic programming: O(E*F^2) time, O(E*F) space
+    int minEggs[e+1][f+1];
+
+    for (int i = 0; i <= e; i++) {
+        for (int j = 0; j <= f; j++)
+        {
+            if (i <= 1 || j <= 1) minEggs[i][j] = j;
+            else {
+                int min_tries = f;
+                for (int k = 1; k <= j; k++) { // Floor at which we start dropping egg
+                    min_tries = min (min_tries, 1 + max ( minEggs[i-1][k-1],  // egg breaks
+                                                          minEggs[i][j-k]     // egg does not break
+                                                         )
+                                     );
+                }
+                minEggs[i][j] = min_tries;
+            }
+        }
+    }
+    return minEggs[e][f];
+}
+
+map<pair<int,int>,int> egg_memory;
+
+int eggDrop_mem (int e, int f) {
+    // Dynamic programming with memoization approach (top-down DP)
+    // Simpler Code and Direct Translation from backtracking version, but complexity is harder to
+    // determine
+
+    if (e <= 1 || f <= 1) return f;
+
+    // Check if we have the solution already in the memory
+    if (egg_memory.find (std::make_pair(e,f) ) != egg_memory.end() ) {
+        return egg_memory[std::make_pair(e,f)];
+    }
+
+    int min_tries = f;
+    for (int i = 1; i <= f; i++) {
+        min_tries = min ( min_tries , 1 + max (eggDrop_mem (e-1, i-1), // egg breaks
+                                               eggDrop_mem (e,   f-i)  // egg does not break
+                                              )
+                        );
+    }
+
+    // Store in memory and return
+    egg_memory[std::make_pair(e,f)] = min_tries;
+    return min_tries;
+}
+
+/* ====================================House Robber===============================================*/
+// http://codercareer.blogspot.com.es/2013/02/no-44-maximal-stolen-values.html
+// http://www.programcreek.com/2014/03/leetcode-house-robber-java/
+
+int houseRobber (vector<int>& array, int h) {
+    // Backtracking: number of strings without consecutive 1's  (O(2^H) time complexity)
+    if (h <= 0)  return 0;
+    if (h == 1) return array[0];
+    return max (array[h-1] + houseRobber(array, h-2) , houseRobber(array, h-1));
+}
+
+map<int, int> house_memory;
+int houseRobber_mem (vector<int>& array, int h) {
+    // Dynamic programming with memoization: O(H) space and O(H) time complexity
+    if (h <= 0)  {return 0;}
+    if (h == 1)  {return array[0];}
+
+    if (house_memory.find(h) != house_memory.end()) return house_memory[h];
+
+    int robit = array[h-1] + houseRobber_mem(array, h-2);
+    int skip  =            houseRobber_mem(array, h-1);
+    int res   = max(robit, skip);
+
+    house_memory[h] = res;
+    return res;
+}
+
+int house_robber_dyn (vector<int> arr, int n, vector<int>& parent, vector<int>& robbed_res) {
+    // Dynamic programming (bottom-up approach) : O(N) time and O(N) space
+
+    vector<int> robbed(arr.size()+1); // will be assigned to robbed_res, so that I can show how to
+                                      // reconstruct an answer based on robbed and not on parent
+                                      // (to avoid extra space)
+    robbed[0] = 0;
+    parent[0] = 0;
+    robbed[1] = arr[0];
+    parent[1] = 1;
+
+    for (int i = 2; i <= n; i++) {
+        robbed[i] = max (robbed[i-1], arr[i-1] + robbed[i-2]);
+
+        if (robbed[i-1] > (arr[i-1] + robbed[i-2])) {
+            parent[i] = i-1;
+        } else {
+            parent[i] = i-2;
+        }
+    }
+
+    robbed_res = robbed;
+    return robbed[n];
+}
+
+void printSolution_houseRobber_dyn (vector<int> parent, int n) {
+    // We could do an iterative version too, but it requires a stack anyway, so space and time
+    // comlexities are O(N) . This recursive version uses the call stack to store data too
+    if (n == 0) return;
+
+    if (parent[n] != n)     printSolution_houseRobber_dyn(parent, parent[n]);
+    if (n != parent[n] + 1) cout << n << ", ";
+}
+
+void printSolution2_houseRobber_dyn (vector<int> arr, vector<int>& robbed, int n) {
+    if (n <= 0) return;
+
+    // Get parent for n
+    int parent;
+    if (robbed[n-1] > (arr[n-1]) + robbed[n-2] ) parent = n-1;
+    else                                         parent = n-2;
+
+    if (parent != n)      printSolution2_houseRobber_dyn(arr, robbed, parent);
+    if (n != parent + 1)  cout << n << ", ";
+}
+
+/* =============================Color Houses With Minimum Cost====================================*/
+// http://karmaandcoding.blogspot.com.es/2012/02/house-coloring-with-red-blue-and-green.html
+// http://stackoverflow.com/questions/15630743/is-house-coloring-with-three-colors-np
+
+int colorHouses (vector<int>& r, vector<int>& g, vector<int>& b, int n, int prevColor = 'n') {
+    // Backtracking solution: O(2^N) time complexity
+    if (n == 0) return 0;
+
+    if (prevColor == 'n') {
+        return min (r[n-1] + colorHouses (r, g, b, n-1, 'r'),
+               min (g[n-1] + colorHouses (r, g, b, n-1, 'g'),
+                    b[n-1] + colorHouses (r, g, b, n-1, 'b')));
+    } else if (prevColor == 'r') {
+        return min ( g[n-1] + colorHouses(r, g, b, n-1, 'g'),
+                     b[n-1] + colorHouses(r, g, b, n-1, 'b'));
+    } else if (prevColor == 'g') {
+        return min ( r[n-1] + colorHouses(r, g, b, n-1, 'r'),
+                     b[n-1] + colorHouses(r, g, b, n-1, 'b'));
+    } else {
+        return min ( r[n-1] + colorHouses (r, g, b, n-1, 'r'),
+                     g[n-1] + colorHouses (r, g, b, n-1, 'g'));
+    }
+}
+
+int colorHouses_dyn (vector<int>& r,vector<int>& g, vector<int>& b) {
+    // Dynamic programming: O(N) time, O(N) space
+    int bestColor[3][r.size()];  //'0' is r, '1' is g, '2' is b
+
+    bestColor[0][0] = bestColor[1][0] = bestColor[2][0] = 0;
+    for (int i = 1; i <= r.size(); i++) {
+        bestColor[0][i] = r[i-1] + min (bestColor[1][i-1], bestColor[2][i-1]);
+        bestColor[1][i] = g[i-1] + min (bestColor[0][i-1], bestColor[2][i-1]);
+        bestColor[2][i] = b[i-1] + min (bestColor[0][i-1], bestColor[1][i-1]);
+    }
+    int n = r.size(); // or b.size() or g.size();
+    return min (bestColor[0][n], min(bestColor[1][n], bestColor[2][n]) );
+}
+
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void numWays_example() {
     int n = 10;
-    cout << "Number of ways to cover distance 10 is: " << numWays(n) << endl;
+    cout << "Number of ways to cover distance 10 is: " << numWays(n)     << endl;
     cout << "Number of ways to cover distance 10 is: " << numWays_dyn(n) << endl;
 }
 void catalan_example() {
@@ -214,18 +443,18 @@ void catalan_example() {
     cout << "Catalan number for n=6 is: " << catalan_dyn(6) << endl;
 }
 void numPathsMatrix_example() {
-    cout << "Number of paths in a 9x10 matrix is: " << numPathsMatrix(9,10) << endl;;
+    cout << "Number of paths in a 9x10 matrix is: " << numPathsMatrix(9,10)     << endl;;
     cout << "Number of paths in a 9x10 matrix is: " << numPathsMatrix_dyn(9,10) << endl;
 }
 void fib_example() {
-    cout << "Fibonacci number for n=9 is: " << fib(9) << endl;
-    cout << "Fibonacci number for n=9 is: " << fib_dyn(9) << endl;
-    cout << "Fibonacci number for n=9 is: " << fib_dyn2(9) << endl;
+    cout << "Fibonacci number for n=9 is: " << fib(9)                   << endl;
+    cout << "Fibonacci number for n=9 is: " << fib_dyn(9)               << endl;
+    cout << "Fibonacci number for n=9 is: " << fib_dyn2(9)              << endl;
     cout << "Fibonacci number for n=9 is: " << fib_mem_divideconquer(9) << endl;
 }
 void countBinaryStrings_example() {
     cout << "Binary Strings without Consecutive 1s for n=4 : " << countBinaryStrings_dyn(4) << endl;
-    cout << "Binary Strings without Consecutive 1s for n=4 : " << countBinaryStrings(4,-1) << endl;
+    cout << "Binary Strings without Consecutive 1s for n=4 : " << countBinaryStrings(4,-1)  << endl;
 }
 void maxSubMatrixOnes_example() {
     int M[R][C] =  {{0, 1, 1, 0, 1},
@@ -247,8 +476,35 @@ void maxSubMatrixOnes_example() {
         }
         cout << endl;
     }
-
 }
+void eggDrop_example() {
+    cout << "Worst-case tries for 2 eggs and 20 floors is : " << eggDrop(2, 20)     << endl;
+    cout << "Worst-case tries for 2 eggs and 20 floors is : " << eggDrop_dyn(2, 20) << endl;
+    cout << "Worst-case tries for 2 eggs and 20 floors is : " << eggDrop_mem(2, 20) << endl;
+}
+void houseRobber_example() {
+    vector<int> arr    = {6, 1, 2, 7, 9, 15};
+    vector<int> parent( arr.size() + 1 , -1);
+    vector<int> robbed;
+    cout << "Maximum value stolen in houses is: " << houseRobber(arr, 6)     << endl;
+    cout << "Maximum value stolen in houses is: " << houseRobber_mem(arr, 6) << endl;
+
+    cout << "Maximum value stolen in houses is: " << house_robber_dyn(arr, 6, parent,robbed) << " ";
+
+    //cout << "with solution: [" ; printSolution_houseRobber_dyn(parent, 6); cout << "]" << endl;
+
+    cout << "with solution: [" ;
+    printSolution2_houseRobber_dyn(arr, robbed, 6);
+    cout << "]" << endl;
+}
+void colorHouses_example() {
+    vector<int> r= {7,3,8,6,1,2};
+    vector<int> g = {5,6,7,2,4,3};
+    vector<int> b = {10,1,4,9,7,6};
+    cout << "Cheapest house coloring is : " << colorHouses(r, g, b, r.size()) << endl;
+    cout << "Cheapest house coloring is : " << colorHouses_dyn(r, g, b) << endl;
+}
+
 /* ===============================================================================================*/
 int main() {
     numWays_example();
@@ -257,10 +513,35 @@ int main() {
     fib_example();
     countBinaryStrings_example();
     maxSubMatrixOnes_example();
+    eggDrop_example();
+    houseRobber_example();
+    colorHouses_example();
 }
 
 /* =======================================TODO====================================================*/
+// BINOMIAL COEFFICIENTS
+//     https://en.wikipedia.org/wiki/Binomial_coefficient
+//     https://en.wikipedia.org/wiki/Binomial_coefficient#Pascal.27s_triangle
+//
+//     ( n )
+//     (   ) is (n choose k): ways to choose a subset of k elements (disregarding order) from a
+//     ( k )                  set of n elements
+//
+//
+//     (n choose k) = n! / (k! * (n-k)!)
+//
+//     (n choose k) = (n-1 choose k-1) + (n-1 choose k)
+//     (n choose 0) = (n choose n) = 1
+//
+//     (n choose k) = n/k * (n-1 choose k-1)
+//
+//     SUM( 0 <= k <= n , (n choose k) ) = 2^n
+//
+//
+//
 // DYNAMIC PROGRAMMING: http://www.geeksforgeeks.org/fundamentals-of-algorithms/#DynamicProgramming
+// https://www.quora.com/What-are-the-top-10-most-popular-dynamic-programming-problems-among-\
+//         interviewers
 // GREEDY: http://www.geeksforgeeks.org/fundamentals-of-algorithms/#GreedyAlgorithms
 // DIVIDE AND CONQUER NOT STUDIED YET
 // https://math.dartmouth.edu/archive/m19w03/public_html/Section5-2.pdf
