@@ -24,4 +24,4 @@ Study and check the source code of the files using this suggested order:
 7. `search_sort.cpp` -*includes binary heaps*- 
 8. `graphs.cpp`
 9. `backtrack.cpp`
-10. `dynamicprogramming.cpp` (WIP) 
+10. `dynamicprogramming.cpp`
