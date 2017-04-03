@@ -430,6 +430,72 @@ int colorHouses_dyn (vector<int>& r,vector<int>& g, vector<int>& b) {
     return min (bestColor[0][n], min(bestColor[1][n], bestColor[2][n]) );
 }
 
+/*============================Knapsack Problem====================================================*/
+// http://www.geeksforgeeks.org/dynamic-programming-set-10-0-1-knapsack-problem/
+// This is an NP-complete problem. The dynamic solution providedd below is PSEUDO-POLYNOMIAL, as its
+// time complexity depends on target sack of weight W, that is not polynomial wrt length of the
+// input.
+
+int knapsack (int leftW, vector<int>& weights, vector<int>& vals, int n) {
+    // Backtracking solution: O(total number of subsets) = O(2^n) time complexity
+    if (n == 0) return 0;
+
+    if (leftW < weights[n-1]) return (leftW, weights, vals, n-1);
+    else
+        return max (             knapsack(leftW, weights, vals, n-1),
+                     vals[n-1] + knapsack(leftW - weights[n-1], weights, vals, n-1) );
+}
+
+int knapsack_dyn (int W, vector<int>& weights, vector<int>& vals) {
+    // Dynamic programming: O(N*W) time, O(N*W) space  (pseudo-polynomial)
+    int bestValue[weights.size() + 1][W + 1];
+
+    for (int i = 0; i <= weights.size(); i++) {
+        for (int j = 0; j <= W; j++) {
+            if (!i)  bestValue[i][j] = 0;
+            else {
+                if (weights[i-1] <= j) {
+                    bestValue[i][j] = max (vals[i-1] + bestValue[i-1][j-weights[i-1]] ,
+                                                       bestValue[i-1][j]);
+                }
+                else
+                    bestValue[i][j] = bestValue[i-1][j];
+            }
+        }
+    }
+    return bestValue[weights.size()][W];
+}
+
+/*=================================Subset Sum Problem=============================================*/
+// http://www.geeksforgeeks.org/dynamic-programming-subset-sum-problem/
+// Very similar to the Knapsack problem, as different subsets are generated
+
+bool subsetSum (int leftS, vector<int> vals, int n) {
+    // Backtracking solution: O(2^N) time
+    if (!leftS) return true;
+    if (!n)     return false;
+    if (vals[n-1] > leftS) return subsetSum(leftS, vals, n-1);
+    else                   return subsetSum(leftS,           vals, n-1) ||
+                                  subsetSum(leftS-vals[n-1], vals, n-1);
+}
+
+bool subsetSum_dyn (int S, vector<int> vals) {
+    // Dynamic programming solution: O(N*S) time and O(N*S) space
+    bool subsetSum[vals.size()+1][S+1];
+
+    for (int i = 0; i <= vals.size(); i++) {
+        for (int j = 0; j <= S; j++) {
+            if      (!i) subsetSum[i][j] = false;
+            if      (!j) subsetSum[i][j] = true;
+            if (i && j) {
+                if (vals[i-1] > j)  subsetSum[i][j] = subsetSum[i-1][j];
+                else                subsetSum[i][j] = subsetSum[i-1][j] ||
+                                                      subsetSum[i-1][j-vals[i-1]];
+            }
+        }
+    }
+    return subsetSum[vals.size()][S];
+}
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void numWays_example() {
@@ -504,7 +570,19 @@ void colorHouses_example() {
     cout << "Cheapest house coloring is : " << colorHouses(r, g, b, r.size()) << endl;
     cout << "Cheapest house coloring is : " << colorHouses_dyn(r, g, b) << endl;
 }
-
+void knapsack_example() {
+    vector<int> val = {60, 100, 120};
+    vector<int> wt  = {10, 20, 30};
+    int W = 50;
+    cout << "Best knapsack value is : " << knapsack(W, wt, val, val.size()) << endl;
+    cout << "Best knapsack value is : " << knapsack_dyn(W, wt, val)         << endl;
+}
+void subsetSum_example() {
+    vector<int> set = {2,3,4,5,6,7,8,9,10,11,12};
+    int sum = 25;
+    cout << "Is there a subset whose elements sum 25? : " <<subsetSum(sum, set, set.size()) <<endl;
+    cout << "Is there a subset whose elements sum 25? : " <<subsetSum_dyn (sum, set)        <<endl;
+}
 /* ===============================================================================================*/
 int main() {
     numWays_example();
@@ -516,6 +594,8 @@ int main() {
     eggDrop_example();
     houseRobber_example();
     colorHouses_example();
+    knapsack_example();
+    subsetSum_example();
 }
 
 /* =======================================TODO====================================================*/
