@@ -736,7 +736,7 @@ string wordBreak(const string str) {
 
 map<string,string> wordbreak_mem;
 string wordBreak_mem (const string str) {
-    // Dynamic programming (top-bottom approach) : O(N^2*x) time complexity, O(N^2) space complexity
+    // Dynamic programming (top-bottom approach) : O(N^2*x) time complexity, O(N) space complexity
     int len = str.size();
     if (len == 0)        return "";
     if (dictionary(str)) return str;
@@ -756,9 +756,135 @@ string wordBreak_mem (const string str) {
     return "";
 }
 
-/* ===============================Longest Common Substring========================================*/
-
 /* =============================Longest Palindromic Substring=====================================*/
+// http://www.geeksforgeeks.org/longest-palindrome-substring-set-1/
+bool isPalindrome(string& str, int s, int e) {
+    while (s < e) {
+        if (str[s] != str[e]) return false;
+        s++; e--;
+    }
+    return true;
+}
+
+void longestPalindromicSubstring (string& str, int& start, int& end, int& max_size) {
+    // O(N^3) time complexity
+    int maxSize  = 0;
+    int maxStart = 0;
+    for (int s = 1; s <= str.size(); s++) {
+        for (int i = 0; i <= str.size() - s; i++) {
+            bool is = isPalindrome(str, i, i + s - 1);
+            if (is) {
+                maxSize  = s;
+                maxStart = i;
+            }
+        }
+    }
+    max_size  = maxSize;
+    start     = maxStart;
+    end       = maxStart + maxSize - 1;
+}
+
+void longestPalindromicSubstring_dyn (string str, int& max_start, int& max_end, int& max_size) {
+    //Dynamic programmin: O(N^2) time and space complexity
+    int n = str.size();
+    bool tbLPS[n+1][n+1];
+    memset(tbLPS,false,sizeof(tbLPS));
+
+    int start = 0, end = 0;
+    int lps = 0;
+
+    for (int s = 1; s <= n; s++) {
+    // For a given size s, all subproblems of size s-1 have been solved. Will be used in *!
+        for (int i = 0; i <= n-s; i++) {
+            bool found = false;
+            if (s == 1) {
+                tbLPS[i][i+s-1] = true;
+                found = true;
+            }
+            else if (s == 2) {
+                tbLPS[i][i+s-1] = (str[i] == str[i+1]);
+                found = tbLPS[i][i+s-1];
+            } else {
+                if (tbLPS[i+1][i+s-2] && str[i] == str[i+s-1]) {  //*!
+                    tbLPS[i][i+s-1] = true;
+                    found = true;
+                }
+            }
+            if (found) {
+                if (s > lps) {
+                    lps = s;
+                    start = i;
+                    end = start + s - 1;
+                }
+            }
+        }
+    }
+
+    max_start = start;
+    max_end   = end;
+    max_size  = lps;
+}
+/* ===============================Longest Common Substring========================================*/
+// http://www.geeksforgeeks.org/longest-common-substring/
+
+void longestCommonSubstring (string x, string y, int& length, int& start, int& end) {
+    // O(NM^2) temporal complexity  (M is x size, N is y size)
+    // IDEA: consider all substrings of first string and for every substring check if it is a
+    //       substring in second string
+    length = 0;
+    start  = 0;
+    end    = 0;
+    for (unsigned int i = 0; i < x.length(); i++) { //pos
+        for (unsigned int j = 0; j <= x.length() - i; j++) { //size
+            string tmp = x.substr(i, j);
+            if (j == x.length()) tmp = x;
+            if (y.find(tmp) != string::npos) {
+                if (length < j) {
+                    length = j;
+                    start = i;
+                    end = i + j - 1;
+                }
+            }
+        }
+    }
+}
+
+void longestCommonSubstring_dyn (string x, string y, int& length, int& start, int& end) {
+    // Dynamic programming : O(M*N) time and space complexity
+    // IDEA: The longest common suffix has following optimal substructure property
+    //       LCSuff(X, Y, m, n) = LCSuff(X, Y, m-1, n-1) + 1 if X[m-1] = Y[n-1]
+    //                            0  Otherwise (if X[m-1] != Y[n-1])
+    //
+    // The maximum length Longest Common Suffix is the longest common substring.
+    //       LCSubStr(X, Y, m, n)  = Max(LCSuff(X, Y, i, j)) where 1 <= i <= m
+    //                                                         and 1 <= j <= n
+    //
+    int m = x.size();
+    int n = y.size();
+    int lcs[m+1][n+1];
+    start  = 0;
+    end    = 0;
+    length = 0;
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if ((i == 0) || (j == 0)) {
+                lcs[i][j] = 0;
+            } else {
+                if (x[i] == y[j]) {
+                    lcs[i][j] = lcs[i-1][j-1] + 1;
+                    if (length < lcs[i][j]) {
+                        length = lcs[i][j];
+                        start  = j - length + 1;
+                        end    = j;
+                    }
+                } else {
+                    lcs[i][j] = 0;
+                }
+            }
+        }
+    }
+}
 
 /* ===========================Longest Increasing Subsequence======================================*/
 // http://www.geeksforgeeks.org/dynamic-programming-set-3-longest-increasing-subsequence/
@@ -912,13 +1038,39 @@ void isInterleaved_example() {
     cout << "Is an Interleaved Word? : " << isInterleaved(interleaved, a, b)     << endl;
     cout << "Is an Interleaved Word? : " << isInterleaved_dyn(interleaved, a, b) << endl;
 }
-void longestIS_example() {
-    vector<int> arr = { 10, 22, 9, 33, 21, 50, 41, 60 };
-    cout << "Longest Increasing Subsequence is: " << longestIS_dyn(arr) << endl;
-}
 void wordbreak_example() {
     cout << "String broken into words is: " << wordBreak_mem("ilikesamsung") << endl;
     cout << "String broken into words is: " << wordBreak("ilikesamsung")     << endl;
+}
+void longestPalindromicSubstring_example() {
+    int start, end, size;
+    string str = "forgeeksskeegfor";
+    longestPalindromicSubstring(str , start, end, size);
+    cout << "Longest Palindromic Substring has size " << size << " and is : ";
+    for (int i = start; i <= end; i++) {
+        cout << str[i];
+    }
+    cout << endl;
+    longestPalindromicSubstring_dyn(str , start, end, size);
+    cout << "Longest Palindromic Substring has size " << size << " and is : ";
+    for (int i = start; i <= end; i++) {
+        cout << str[i];
+    }
+    cout << endl;
+}
+void longestCommonSubstring_example() {
+    int length, start, end;
+    longestCommonSubstring("OldSite:GeeksforGeeks.org","NewSite:GeeksQuiz.com", length, start, end);
+    cout << "Longest substring has length " << length << ". Start-End is : " << start << " "
+         << end << endl;
+    longestCommonSubstring_dyn("OldSite:GeeksforGeeks.org","NewSite:GeeksQuiz.com",
+                                length, start, end);
+    cout << "Longest substring has length " << length << ". Start-End is : " << start << " "
+         << end << endl;
+}
+void longestIS_example() {
+    vector<int> arr = { 10, 22, 9, 33, 21, 50, 41, 60 };
+    cout << "Longest Increasing Subsequence is: " << longestIS_dyn(arr) << endl;
 }
 
 /* ===============================================================================================*/
@@ -938,8 +1090,10 @@ int main() {
     jobScheduling_example();
     shortestKPath_example();
     isInterleaved_example();
-    longestIS_example();
     wordbreak_example();
+    longestPalindromicSubstring_example();
+    longestCommonSubstring_example();
+    longestIS_example();
 }
 
 /* =======================================TODO====================================================*/
