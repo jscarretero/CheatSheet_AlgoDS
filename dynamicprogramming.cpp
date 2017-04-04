@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string.h>
 #include <vector>
 #include <map>
 #include <list>
@@ -27,7 +28,15 @@ void deleteTree (Node* root) {
     deleteTree(root->left); deleteTree(root->right);
     delete root;
 }
-
+bool dictionary(const string word) { // For Word-Break problem
+    string dictionary[] = {"mobile","samsung","sam","sung","man","mango",
+                           "icecream","and","go","i","like","ice","cream"};
+    int size = sizeof(dictionary)/sizeof(dictionary[0]);
+    for (int i = 0; i < size; i++)
+        if (dictionary[i].compare(word) == 0)
+            return true;
+    return false;
+}
 /* ===============================================================================================*/
 // IMPORTANT:
 // Not all backtracking algorithms can be transformed into DP solutions.
@@ -653,6 +662,126 @@ int shortestKPath_dyn (int graph[V][V], int src, int dst, int k) {
     return shortestPath[src][dst][k];
 }
 
+/* =================================Is String Interleaved of Two Others===========================*/
+// http://www.geeksforgeeks.org/check-whether-a-given-string-is-an-interleaving-of-two-other-given-\
+//        strings-set-2/
+bool isInterleaved (const char* str, const char* a, const char* b) {
+    // Backtracking: O(2^(N+M)) time complexity
+
+    if (*str == '\0' && *a == '\0' && *b == '\0')
+        return true;
+    if (*str == '\0')
+        return false;
+
+    return (  ((*str == *a) && isInterleaved(str+1, a+1, b))  ||
+              ((*str == *b) && isInterleaved(str+1, a, b+1)) );
+}
+
+bool isInterleaved_dyn(const char* S, const char* A, const char* B) {
+    // Dynamic programmin O(M*N) time&space complexity
+    int M = strlen(A), N = strlen(B);
+
+    bool IL[M+1][N+1];
+    memset(IL, 0, sizeof(IL)); // Initialize all values as false.
+
+    if ((M+N) != strlen(S))
+       return false;
+
+    for (int i = 0; i <= M; ++i) {
+        for (int j = 0; j <= N; ++j) {
+            if (i==0 && j==0)
+                IL[i][j] = true;
+
+            else if (i==0 && B[j-1]==S[j-1])
+                IL[i][j] = IL[i][j-1];
+
+            else if (j==0 && A[i-1]==S[i-1])
+                IL[i][j] = IL[i-1][j];
+
+            else if(A[i-1]==S[i+j-1] && B[j-1]!=S[i+j-1])
+                IL[i][j] = IL[i-1][j];
+
+            else if (A[i-1]!=S[i+j-1] && B[j-1]==S[i+j-1])
+                IL[i][j] = IL[i][j-1];
+
+            else if (A[i-1]==S[i+j-1] && B[j-1]==S[i+j-1])
+                IL[i][j]=(IL[i-1][j] || IL[i][j-1]) ;
+        }
+    }
+    return IL[M][N];
+}
+
+/* ==============================Break Sentence Into Words From Dictionary========================*/
+// http://www.geeksforgeeks.org/dynamic-programming-set-32-word-break-problem/
+// http://thenoisychannel.com/2011/08/08/retiring-a-great-interview-problem
+
+string wordBreak(const string str) {
+    // Backtracking: O((2^N)*x) time Complexity (*x comes because of dictionary cost)
+    int len = str.size();
+
+    if (len == 0)        return "";
+    if (dictionary(str)) return str;
+
+    for (int i = 1; i <= len; i++) {
+        string substring = str.substr(0,i);
+        if (dictionary(substring)) {
+            string res = wordBreak(str.substr(i,len-1));
+            if (res != "") {
+                return substring + " "+ res;
+            }
+        }
+    }
+    return "";
+}
+
+map<string,string> wordbreak_mem;
+string wordBreak_mem (const string str) {
+    // Dynamic programming (top-bottom approach) : O(N^2*x) time complexity, O(N^2) space complexity
+    int len = str.size();
+    if (len == 0)        return "";
+    if (dictionary(str)) return str;
+
+    if (wordbreak_mem.find(str) != wordbreak_mem.end()) return wordbreak_mem[str];
+
+    for (int i = 1; i <= len; i++) {
+        string substring = str.substr(0,i);
+        if (dictionary(substring)) {
+            string breaks = wordBreak_mem(str.substr(i,len-1));
+            if (breaks != "") {
+                wordbreak_mem[str] = substring + " " + breaks;
+                return wordbreak_mem[str];
+            }
+        }
+    }
+    return "";
+}
+
+/* ===============================Longest Common Substring========================================*/
+
+/* =============================Longest Palindromic Substring=====================================*/
+
+/* ===========================Longest Increasing Subsequence======================================*/
+// http://www.geeksforgeeks.org/dynamic-programming-set-3-longest-increasing-subsequence/
+// http://algorithms.tutorialhorizon.com/dynamic-programming-longest-increasing-subsequence/
+
+// IMPORANT: We are looking for a set of a Sequence, not a Segment (not consecutive always)
+int longestIS_dyn(vector<int> arr){
+    // Dynamic programmin: O(N^2) time complexity, O(N) spaces
+    int LIS[arr.size()+1];
+    int global_max = 0;
+    for (int i = 0; i < arr.size(); i++) {
+        int maxim = -1;
+        for (int j = 0; j < i; j++) {
+            if (arr[j] < arr[i]) {
+                maxim = max(maxim, 1+LIS[j]);
+                global_max = max (global_max, maxim);
+            }
+        }
+        if (maxim == -1) LIS[i] = 1;
+        else LIS[i] = maxim;
+    }
+    return global_max;
+}
 
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void numWays_example() {
@@ -775,6 +904,23 @@ void shortestKPath_example() {
     cout << "Weight of shortest path is " << shortestKPath(graph,u,v,k)     << endl;
     cout << "Weight of shortest path is " << shortestKPath_dyn(graph,u,v,k) << endl;
 }
+void isInterleaved_example() {
+    const char* interleaved = "XXZXXY";
+    const char* a           = "XXY";
+    const char* b           = "XXZ";
+
+    cout << "Is an Interleaved Word? : " << isInterleaved(interleaved, a, b)     << endl;
+    cout << "Is an Interleaved Word? : " << isInterleaved_dyn(interleaved, a, b) << endl;
+}
+void longestIS_example() {
+    vector<int> arr = { 10, 22, 9, 33, 21, 50, 41, 60 };
+    cout << "Longest Increasing Subsequence is: " << longestIS_dyn(arr) << endl;
+}
+void wordbreak_example() {
+    cout << "String broken into words is: " << wordBreak_mem("ilikesamsung") << endl;
+    cout << "String broken into words is: " << wordBreak("ilikesamsung")     << endl;
+}
+
 /* ===============================================================================================*/
 int main() {
     numWays_example();
@@ -791,6 +937,9 @@ int main() {
     largestIndependentSet_example();
     jobScheduling_example();
     shortestKPath_example();
+    isInterleaved_example();
+    longestIS_example();
+    wordbreak_example();
 }
 
 /* =======================================TODO====================================================*/
