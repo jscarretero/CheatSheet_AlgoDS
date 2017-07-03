@@ -27,5 +27,6 @@ Study and check the source code of the files using this suggested order:
 10. `dynamicprogramming.cpp`
 
 ### Extra
-For system-design questions, check this github repo:
-    https://github.com/donnemartin/system-design-primer#system-design-topics-start-here
+For system-design questions, check these github repos:
+1. https://github.com/donnemartin/system-design-primer#system-design-topics-start-here
+2. https://github.com/checkcheckzz/system-design-interview
