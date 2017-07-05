@@ -262,6 +262,127 @@ bool allHamiltonian (bool graph[V][V], int current, list<int>& current_sol, vect
     return some;
 }
 
+/* ==========================Minimum sheets to bin-pack a set of rectangles=======================*/
+// https://stackoverflow.com/questions/21078959/an-approach-to-implement-rectangular-bin-packing
+// http://codeincomplete.com/posts/bin-packing/
+
+struct NodeS {
+    bool used;
+    int  elemId;
+    int  x;
+    int  y;
+    int  w;
+    int  h;
+    NodeS* down;
+    NodeS* right;
+};
+
+struct Elem {
+    int w;
+    int h;
+    int elemId;
+};
+
+NodeS* createNodeS (int x, int y, int w, int h) {
+    NodeS* root = new NodeS;
+    root->used   = false;
+    root->elemId = -1;
+    root->x      = x;
+    root->y      = y;
+    root->w      = w;
+    root->h      = h;
+    root->down   = NULL;
+    root->right  = NULL;
+    return root;
+}
+
+NodeS* findNodeS (NodeS* root, int elemId, int w, int h) {
+    if (!root) {
+        return NULL;
+    }
+    
+    if (root->used) {
+        NodeS* res = NULL;
+        res = findNodeS(root->down, elemId, w, h);
+        if (!res) {
+            res = findNodeS(root->right, elemId, w, h);
+        }
+        return res;        
+    } 
+    
+    if ((root->w >= w) && (root->h >=h)) {
+        return root;
+    }
+    
+    return NULL;
+}
+
+NodeS* splitNodeS (NodeS* root, int elemId, int w, int h) {
+    //assert(!root->used);
+    root->used   = true;
+    root->elemId = elemId;
+    root->right  = createNodeS(root->x + w, root->y, root->w - w, root->h);
+    root->down   = createNodeS(root->x, root->y + h, root->w, root->h - h);
+    return root;
+}
+
+void printTreeMap (NodeS* root) {
+    if (!root) return;
+    if (root->used) {
+        cout << "\t" << root->elemId << " (" << root->x << "," << root->y << ")" << endl;
+    }
+    printTreeMap(root->down);
+    printTreeMap(root->right);
+}
+
+vector<NodeS*> pack (vector<Elem>& elems, int w, int h) {
+    vector<NodeS*> allSheets;
+    NodeS* sheet = NULL;
+    int numSheets = 0;
+       
+    for (int i = 0; i < elems.size(); i++) {
+        NodeS* n = findNodeS(sheet, elems[i].elemId, elems[i].w, elems[i].h);
+        if (!n) {
+            numSheets++;
+            if (sheet) allSheets.push_back(sheet);
+            sheet = createNodeS(0, 0, w, h);
+            n     = sheet;
+        }
+        NodeS* m = splitNodeS (n, elems[i].elemId, elems[i].w, elems[i].h);
+    }   
+    if (sheet) allSheets.push_back(sheet);
+    return allSheets;
+}
+
+NodeS* deleteTreeS (NodeS* root) {
+    if (root) {
+        if (root->down)  deleteTreeS(root->down);
+        if (root->right) deleteTreeS(root->right);
+        delete root;
+    }
+}
+
+void bestPack (vector<Elem>& elems, int w, int h, int l, int r, int& minSheets, 
+               vector<NodeS*>& best) {
+    // Backtrack to generate all elems permutations
+    if (l == r) {
+        vector<NodeS*> res = pack(elems, w, h);
+        if (res.size() < minSheets) {
+            minSheets = res.size();
+            for (int i = 0; i < best.size(); i++) { deleteTreeS(best[i]); }
+            best = res;
+        } else {
+            for (int i = 0; i < best.size(); i++) { deleteTreeS(res[i]); }
+        }
+    }    
+
+    for (int i = l; i <= r; i++) {
+        Elem tmp = elems[l]; elems[l] = elems[i]; elems[i] = tmp;  //swap
+        bestPack(elems, w, h, l+1, r, minSheets, best);
+             tmp = elems[l]; elems[l] = elems[i]; elems[i] = tmp;  //unswap
+    }          
+}
+
 /* ===========================EXAMPLE FUNCTIONS TO DEMO FUNCTIONS ABOVE===========================*/
 void stringPermutations_example() {
     string example="HELLO";
@@ -377,6 +498,27 @@ void allHamiltonian_example() {
     bool found = allHamiltonian(graph, 0, curr_sol, visited);
     if (!found) cout << "None" << endl;
 }
+void bestPack_example() {
+    vector<Elem> elems;
+    elems.push_back({1,4,0});
+    elems.push_back({1,2,1});
+    elems.push_back({1,1,2});
+    
+    int minSheets = elems.size() + 1;
+    vector<NodeS*> best;
+    int w = 10;
+    int h = 10;
+    
+    bestPack(elems, w, h, 0, elems.size() - 1, minSheets, best);
+    //assert(minSheets == best.size());
+    cout << "Best 2D bin-pack rectangle needs " << minSheets << " sheets. ";
+    cout << "Best 2D bin-packing solution is: " << endl;
+    for (int i = 0; i < best.size(); i++) {
+        cout << "\t--- Sheet " << i << " ---" << endl; 
+        printTreeMap(best[i]);
+        cout << endl;
+    }   
+}
 
 /* ===============================================================================================*/
 int main() {
@@ -388,6 +530,7 @@ int main() {
     validParenthesis_example();
     graphColoring_example();
     allHamiltonian_example();
+    bestPack_example();
 }
 
 /* =======================================TODO====================================================*/
