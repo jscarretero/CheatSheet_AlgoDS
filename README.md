@@ -30,3 +30,10 @@ Study and check the source code of the files using this suggested order:
 For system-design questions, check these github repos:
 1. https://github.com/donnemartin/system-design-primer#system-design-topics-start-here
 2. https://github.com/checkcheckzz/system-design-interview
+
+Then, study some interesting design problem questions like:
+-- [Pastebin design](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/pastebin/README.md) 
+-- [Twitter timeline and search](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/twitter/README.md) 
+-- [Amazon sales rank](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/sales_rank/README.md) 
+-- [Google Analytics](https://en.wikipedia.org/wiki/Google_Analytics) 
+-- [Google Docs](https://www.youtube.com/watch?v=mDYuJoQEowQ) 
