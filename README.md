@@ -32,8 +32,9 @@ For system-design questions, check these github repos:
 2. https://github.com/checkcheckzz/system-design-interview
 
 Then, study some interesting design problem questions like:
--- [Pastebin design](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/pastebin/README.md) 
--- [Twitter timeline and search](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/twitter/README.md) 
--- [Amazon sales rank](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/sales_rank/README.md) 
--- [Google Analytics](https://en.wikipedia.org/wiki/Google_Analytics) 
--- [Google Docs](https://www.youtube.com/watch?v=mDYuJoQEowQ) 
+
+1. [Pastebin design](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/pastebin/README.md) 
+2. [Twitter timeline and search](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/twitter/README.md) 
+3. [Amazon sales rank](https://github.com/jscarretero/system-design-primer/blob/master/solutions/system_design/sales_rank/README.md) 
+4. [Google Analytics](https://en.wikipedia.org/wiki/Google_Analytics) 
+5. [Google Docs](https://www.youtube.com/watch?v=mDYuJoQEowQ) 
